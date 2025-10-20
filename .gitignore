@@ -30,3 +30,10 @@ Thumbs.db
 # Environment
 .env
 frontend/env.js
+.python-version
+OLLAMA_CONCURRENCY.md
+PHASE1_COMPLETE.md
+PHASE1_SUMMARY.md
+PHASE2_COMPLETE.md
+test_api.sh
+verify.sh

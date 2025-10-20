@@ -19,8 +19,13 @@ const API = {
         });
 
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Login failed');
+            const message = await response.text();
+            try {
+                const error = JSON.parse(message || '{}');
+                throw new Error(error.error || 'Login failed');
+            } catch (parseError) {
+                throw new Error(message || 'Login failed');
+            }
         }
 
         return await response.json();
@@ -59,8 +64,13 @@ const API = {
         });
 
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Failed to create session');
+            const message = await response.text();
+            try {
+                const error = JSON.parse(message || '{}');
+                throw new Error(error.error || 'Failed to create session');
+            } catch (parseError) {
+                throw new Error(message || 'Failed to create session');
+            }
         }
 
         return await response.json();
@@ -85,8 +95,13 @@ const API = {
         });
 
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Failed to send message');
+            const message = await response.text();
+            try {
+                const error = JSON.parse(message || '{}');
+                throw new Error(error.error || 'Failed to send message');
+            } catch (parseError) {
+                throw new Error(message || 'Failed to send message');
+            }
         }
 
         return await response.json();
@@ -109,8 +124,13 @@ const API = {
         });
 
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Failed to reset session');
+            const message = await response.text();
+            try {
+                const error = JSON.parse(message || '{}');
+                throw new Error(error.error || 'Failed to reset session');
+            } catch (parseError) {
+                throw new Error(message || 'Failed to reset session');
+            }
         }
 
         return await response.json();
