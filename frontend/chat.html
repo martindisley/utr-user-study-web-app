@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat - Unlearning to Rest</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom scrollbar for chat */
+        .chat-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .chat-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        .chat-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        .chat-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 h-screen flex flex-col">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div>
+                <h1 class="text-lg font-semibold text-gray-800" id="modelName">Loading...</h1>
+                <p class="text-xs text-gray-500" id="userEmail"></p>
+            </div>
+            <div class="flex gap-2">
+                <button 
+                    id="newSessionBtn"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition"
+                >
+                    New Session
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Chat Area -->
+    <div class="flex-1 overflow-hidden flex flex-col max-w-4xl mx-auto w-full">
+        <!-- Instructions (dismissible) -->
+        <div id="instructionsCard" class="bg-blue-50 border-b border-blue-200 p-4 m-4 rounded-lg">
+            <div class="flex justify-between items-start">
+                <div class="flex-1 text-sm text-blue-900" id="instructionsContent">
+                    <!-- Instructions will be inserted here -->
+                </div>
+                <button 
+                    id="dismissInstructions"
+                    class="text-blue-600 hover:text-blue-800 ml-4 text-sm underline"
+                >
+                    Dismiss
+                </button>
+            </div>
+        </div>
+
+        <!-- Messages Container -->
+        <div id="messagesContainer" class="flex-1 overflow-y-auto px-4 pb-4 chat-container">
+            <div id="messages" class="space-y-4">
+                <!-- Messages will be inserted here -->
+            </div>
+            
+            <!-- Typing Indicator -->
+            <div id="typingIndicator" class="hidden flex items-center gap-2 text-gray-500 text-sm mt-4">
+                <div class="flex gap-1">
+                    <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
+                    <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
+                    <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
+                </div>
+                <span>AI is thinking...</span>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="bg-white border-t p-4">
+            <form id="messageForm" class="flex gap-2">
+                <input 
+                    type="text" 
+                    id="messageInput" 
+                    placeholder="Type your message..."
+                    class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    required
+                >
+                <button 
+                    type="submit" 
+                    id="sendBtn"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    Send
+                </button>
+                <button 
+                    type="button" 
+                    id="resetBtn"
+                    class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-medium transition"
+                >
+                    Reset Chat
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Load JavaScript modules -->
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/storage.js"></script>
+    
+    <!-- Chat page logic -->
+    <script>
+        // Check if user is logged in and has a session
+        if (!Storage.isLoggedIn() || !Storage.getSessionId()) {
+            window.location.href = 'index.html';
+        }
+
+        const modelName = document.getElementById('modelName');
+        const userEmail = document.getElementById('userEmail');
+        const messagesContainer = document.getElementById('messagesContainer');
+        const messages = document.getElementById('messages');
+        const messageForm = document.getElementById('messageForm');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const newSessionBtn = document.getElementById('newSessionBtn');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const instructionsCard = document.getElementById('instructionsCard');
+        const instructionsContent = document.getElementById('instructionsContent');
+        const dismissInstructions = document.getElementById('dismissInstructions');
+
+        // Display current model and user
+        const currentModel = Storage.getCurrentModel();
+        modelName.textContent = `Model: ${currentModel}`;
+        userEmail.textContent = Storage.getUserEmail();
+
+        // Display instructions
+        instructionsContent.innerHTML = CONFIG.STUDY_INSTRUCTIONS;
+
+        // Dismiss instructions
+        dismissInstructions.addEventListener('click', () => {
+            instructionsCard.classList.add('hidden');
+        });
+
+        // Create message bubble
+        function createMessageBubble(role, content, timestamp) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
+            
+            const bubble = document.createElement('div');
+            bubble.className = `max-w-[70%] rounded-lg px-4 py-3 ${
+                role === 'user' 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-white border border-gray-200 text-gray-800'
+            }`;
+            
+            const text = document.createElement('p');
+            text.className = 'text-sm whitespace-pre-wrap break-words';
+            text.textContent = content;
+            
+            bubble.appendChild(text);
+            
+            if (timestamp) {
+                const time = document.createElement('p');
+                time.className = `text-xs mt-1 ${role === 'user' ? 'text-blue-100' : 'text-gray-400'}`;
+                time.textContent = new Date(timestamp).toLocaleTimeString();
+                bubble.appendChild(time);
+            }
+            
+            messageDiv.appendChild(bubble);
+            return messageDiv;
+        }
+
+        // Add message to UI
+        function addMessage(role, content, timestamp) {
+            const messageBubble = createMessageBubble(role, content, timestamp);
+            messages.appendChild(messageBubble);
+            scrollToBottom();
+        }
+
+        // Scroll to bottom of messages
+        function scrollToBottom() {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Show/hide typing indicator
+        function setTyping(isTyping) {
+            if (isTyping) {
+                typingIndicator.classList.remove('hidden');
+                scrollToBottom();
+            } else {
+                typingIndicator.classList.add('hidden');
+            }
+        }
+
+        // Handle message submission
+        messageForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const message = messageInput.value.trim();
+            if (!message) return;
+            
+            // Disable input
+            messageInput.disabled = true;
+            sendBtn.disabled = true;
+            
+            // Add user message to UI
+            addMessage('user', message, new Date().toISOString());
+            
+            // Clear input
+            messageInput.value = '';
+            
+            // Show typing indicator
+            setTyping(true);
+            
+            try {
+                // Send message to API
+                const sessionId = Storage.getSessionId();
+                const response = await API.sendMessage(sessionId, message);
+                
+                // Hide typing indicator
+                setTyping(false);
+                
+                // Add assistant response to UI
+                addMessage('assistant', response.response, response.timestamp);
+                
+            } catch (error) {
+                console.error('Error sending message:', error);
+                setTyping(false);
+                
+                // Show error message
+                addMessage('assistant', `Error: ${error.message}. Please try again.`, new Date().toISOString());
+            } finally {
+                // Re-enable input
+                messageInput.disabled = false;
+                sendBtn.disabled = false;
+                messageInput.focus();
+            }
+        });
+
+        // Handle reset chat
+        resetBtn.addEventListener('click', async () => {
+            if (!confirm('Are you sure you want to reset the chat? This will clear the conversation history.')) {
+                return;
+            }
+            
+            try {
+                const sessionId = Storage.getSessionId();
+                const response = await API.resetSession(sessionId);
+                
+                // Update session ID
+                Storage.saveSession(response.new_session_id, currentModel);
+                
+                // Clear messages
+                messages.innerHTML = '';
+                
+                // Show success message
+                const successMsg = createMessageBubble('assistant', 'Chat has been reset. Starting fresh!', new Date().toISOString());
+                messages.appendChild(successMsg);
+                
+                // Show instructions again
+                instructionsCard.classList.remove('hidden');
+                
+            } catch (error) {
+                console.error('Error resetting session:', error);
+                alert('Failed to reset chat. Please try again.');
+            }
+        });
+
+        // Handle new session
+        newSessionBtn.addEventListener('click', () => {
+            if (confirm('Start a new session with a different model?')) {
+                Storage.clearSession();
+                window.location.href = 'select-model.html';
+            }
+        });
+
+        // Initialize: Show welcome message
+        addMessage('assistant', `Hello! I'm ready to help you with your design ideation. Feel free to ask me anything!`, new Date().toISOString());
+        
+        // Focus on input
+        messageInput.focus();
+    </script>
+</body>
+</html>
