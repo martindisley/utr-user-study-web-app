@@ -1,7 +1,10 @@
 """
 Admin routes - handles data export and management.
 """
+from collections import Counter
+
 from flask import Blueprint, jsonify
+
 from backend.database import get_db_session
 from backend.models import User, Session, Message
 
@@ -13,36 +16,102 @@ def export_data():
     """
     Export all study data in JSON format.
     
-    Response:
+    Response (human readable):
         {
-            "users": [...],
-            "sessions": [...],
-            "messages": [...]
+            "summary": {
+                "total_users": 12,
+                "total_sessions": 25,
+                "total_messages": 150,
+                "sessions_by_model": {
+                    "llama3.2:3b": 12,
+                    "martindisley/unlearning-to-rest:latest": 13
+                }
+            },
+            "users": [
+                {
+                    "id": 1,
+                    "email": "student@example.edu",
+                    "created_at": "2025-10-17T13:57:10.228704",
+                    "session_count": 2,
+                    "sessions": [
+                        {
+                            "id": 4,
+                            "model_name": "martindisley/unlearning-to-rest:latest",
+                            "created_at": "2025-10-17T14:10:00.896350",
+                            "message_count": 6,
+                            "messages": [
+                                {
+                                    "id": 21,
+                                    "role": "user",
+                                    "timestamp": "2025-10-17T14:10:05.711022",
+                                    "content": "Hello"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
         }
     """
     try:
         db = get_db_session()
         
         try:
-            # Get all users
-            users = db.query(User).all()
-            users_data = [user.to_dict() for user in users]
-            
-            # Get all sessions
-            sessions = db.query(Session).all()
-            sessions_data = [session.to_dict() for session in sessions]
-            
-            # Get all messages
-            messages = db.query(Message).all()
-            messages_data = [message.to_dict() for message in messages]
-            
+            # Fetch users, sessions and messages ordered by time for readability
+            users = db.query(User).order_by(User.created_at).all()
+            sessions = db.query(Session).order_by(Session.created_at).all()
+            messages = db.query(Message).order_by(Message.timestamp).all()
+
+            # Build lookup for sessions per user and messages per session
+            sessions_by_user = {}
+            session_lookup = {}
+
+            for session in sessions:
+                session_dict = {
+                    'id': session.id,
+                    'model_name': session.model_name,
+                    'created_at': session.created_at.isoformat(),
+                    'message_count': 0,
+                    'messages': []
+                }
+                session_lookup[session.id] = session_dict
+                sessions_by_user.setdefault(session.user_id, []).append(session_dict)
+
+            for message in messages:
+                session_dict = session_lookup.get(message.session_id)
+                if not session_dict:
+                    continue
+                session_dict['messages'].append({
+                    'id': message.id,
+                    'role': message.role,
+                    'timestamp': message.timestamp.isoformat(),
+                    'content': message.content
+                })
+
+            for session_dict in session_lookup.values():
+                session_dict['message_count'] = len(session_dict['messages'])
+
+            users_data = []
+            for user in users:
+                user_sessions = sessions_by_user.get(user.id, [])
+                users_data.append({
+                    'id': user.id,
+                    'email': user.email,
+                    'created_at': user.created_at.isoformat(),
+                    'session_count': len(user_sessions),
+                    'sessions': user_sessions
+                })
+
+            summary = {
+                'total_users': len(users),
+                'total_sessions': len(sessions),
+                'total_messages': len(messages),
+                'sessions_by_model': dict(Counter(session.model_name for session in sessions))
+            }
+
             return jsonify({
-                'users': users_data,
-                'sessions': sessions_data,
-                'messages': messages_data,
-                'total_users': len(users_data),
-                'total_sessions': len(sessions_data),
-                'total_messages': len(messages_data)
+                'summary': summary,
+                'users': users_data
             }), 200
             
         finally:
