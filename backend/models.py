@@ -36,10 +36,12 @@ class Session(Base):
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
     model_name = Column(String(100), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    context_reset_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     
     # Relationships
     user = relationship('User', back_populates='sessions')
     messages = relationship('Message', back_populates='session', cascade='all, delete-orphan')
+    concepts = relationship('Concept', back_populates='session', cascade='all, delete-orphan')
     
     def to_dict(self, include_messages=False):
         """Convert session to dictionary."""
@@ -47,7 +49,8 @@ class Session(Base):
             'id': self.id,
             'user_id': self.user_id,
             'model_name': self.model_name,
-            'created_at': self.created_at.isoformat()
+            'created_at': self.created_at.isoformat(),
+            'context_reset_at': (self.context_reset_at or self.created_at).isoformat()
         }
         if include_messages:
             data['messages'] = [msg.to_dict() for msg in self.messages]
@@ -66,6 +69,7 @@ class Message(Base):
     
     # Relationships
     session = relationship('Session', back_populates='messages')
+    concepts = relationship('Concept', back_populates='source_message', cascade='all, delete-orphan')
     
     def to_dict(self):
         """Convert message to dictionary."""
@@ -75,4 +79,41 @@ class Message(Base):
             'role': self.role,
             'content': self.content,
             'timestamp': self.timestamp.isoformat()
+        }
+
+
+class Concept(Base):
+    """Concept model - captures participant-selected concepts for a session."""
+    __tablename__ = 'concepts'
+
+    id = Column(Integer, primary_key=True)
+    session_id = Column(Integer, ForeignKey('sessions.id'), nullable=False, index=True)
+    title = Column(String(150), nullable=True)
+    content = Column(Text, nullable=False)
+    source_message_id = Column(Integer, ForeignKey('messages.id'), nullable=True, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False, onupdate=datetime.utcnow)
+
+    # Relationships
+    session = relationship('Session', back_populates='concepts')
+    source_message = relationship('Message', back_populates='concepts')
+
+    def to_dict(self):
+        """Convert concept to dictionary."""
+        excerpt = None
+        source_role = None
+        if self.source_message:
+            excerpt = self.source_message.content[:200]
+            source_role = self.source_message.role
+
+        return {
+            'id': self.id,
+            'session_id': self.session_id,
+            'title': self.title,
+            'content': self.content,
+            'source_message_id': self.source_message_id,
+            'created_at': self.created_at.isoformat(),
+            'updated_at': self.updated_at.isoformat(),
+            'source_message_excerpt': excerpt,
+            'source_message_role': source_role
         }

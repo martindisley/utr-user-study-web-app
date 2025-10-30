@@ -26,7 +26,7 @@
 <body class="bg-gray-50 h-screen flex flex-col">
     <!-- Header -->
     <div class="bg-white shadow-sm border-b">
-        <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
             <div>
                 <h1 class="text-lg font-semibold text-gray-800" id="modelName">Loading...</h1>
                 <p class="text-xs text-gray-500" id="userEmail"></p>
@@ -43,64 +43,125 @@
     </div>
 
     <!-- Main Chat Area -->
-    <div class="flex-1 overflow-hidden flex flex-col max-w-4xl mx-auto w-full">
+    <div class="flex-1 overflow-hidden flex flex-col max-w-6xl mx-auto w-full">
         <!-- Instructions (dismissible) -->
-        <div id="instructionsCard" class="bg-blue-50 border-b border-blue-200 p-4 m-4 rounded-lg">
-            <div class="flex justify-between items-start">
+        <div id="instructionsCard" class="bg-blue-50 border border-blue-200 mx-4 mt-4 rounded-lg">
+            <div class="flex justify-between items-start p-4">
                 <div class="flex-1 text-sm text-blue-900" id="instructionsContent">
                     <!-- Instructions will be inserted here -->
                 </div>
                 <button 
                     id="dismissInstructions"
-                    class="text-blue-600 hover:text-blue-800 ml-4 text-sm underline"
+                    class="text-blue-600 hover:text-blue-800 ml-4 text-sm underline whitespace-nowrap"
                 >
                     Dismiss
                 </button>
             </div>
         </div>
 
-        <!-- Messages Container -->
-        <div id="messagesContainer" class="flex-1 overflow-y-auto px-4 pb-4 chat-container">
-            <div id="messages" class="space-y-4">
-                <!-- Messages will be inserted here -->
-            </div>
-            
-            <!-- Typing Indicator -->
-            <div id="typingIndicator" class="hidden flex items-center gap-2 text-gray-500 text-sm mt-4">
-                <div class="flex gap-1">
-                    <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
-                    <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
-                    <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
-                </div>
-                <span>AI is thinking...</span>
-            </div>
-        </div>
+        <div class="flex-1 flex flex-col md:flex-row gap-4 px-4 pb-4 mt-4">
+            <!-- Chat Column -->
+            <div class="flex flex-col flex-1 md:w-2/3">
+                <div class="flex flex-col flex-1 rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden">
+                    <div id="messagesContainer" class="flex-1 overflow-y-auto px-4 py-4 chat-container bg-gray-50">
+                        <div id="messages" class="space-y-4">
+                            <!-- Messages will be inserted here -->
+                        </div>
 
-        <!-- Input Area -->
-        <div class="bg-white border-t p-4">
-            <form id="messageForm" class="flex gap-2">
-                <input 
-                    type="text" 
-                    id="messageInput" 
-                    placeholder="Type your message..."
-                    class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                    required
-                >
-                <button 
-                    type="submit" 
-                    id="sendBtn"
-                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    Send
-                </button>
-                <button 
-                    type="button" 
-                    id="resetBtn"
-                    class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-medium transition"
-                >
-                    Reset Chat
-                </button>
-            </form>
+                        <!-- Typing Indicator -->
+                        <div id="typingIndicator" class="hidden flex items-center gap-2 text-gray-500 text-sm mt-4">
+                            <div class="flex gap-1">
+                                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
+                                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
+                                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
+                            </div>
+                            <span>AI is thinking...</span>
+                        </div>
+                    </div>
+
+                    <div class="border-t bg-white">
+                        <form id="messageForm" class="flex flex-col sm:flex-row gap-2 p-4">
+                            <input 
+                                type="text" 
+                                id="messageInput" 
+                                placeholder="Type your message..."
+                                class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                required
+                            >
+                            <div class="flex gap-2 sm:w-auto">
+                                <button 
+                                    type="submit" 
+                                    id="sendBtn"
+                                    class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    Send
+                                </button>
+                                <button 
+                                    type="button" 
+                                    id="resetBtn"
+                                    class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-3 rounded-lg font-medium transition"
+                                >
+                                    Reset Chat
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Concepts Column -->
+            <div id="conceptPanel" class="md:w-1/3 flex flex-col rounded-lg border border-gray-200 bg-white shadow-sm">
+                <div class="px-4 py-4 border-b bg-gray-50">
+                    <h2 class="text-base font-semibold text-gray-800">Concept Capture</h2>
+                    <p class="text-sm text-gray-600 mt-1">Collect the ideas you want to carry forward. You can edit or delete them at any time.</p>
+                </div>
+                <div class="flex-1 overflow-hidden flex flex-col">
+                    <form id="conceptForm" class="p-4 border-b space-y-3">
+                        <div>
+                            <label for="conceptTitle" class="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Title (optional)</label>
+                            <input 
+                                type="text" 
+                                id="conceptTitle"
+                                maxlength="150"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none text-sm"
+                                placeholder="e.g. Resting pod with adjustable panels"
+                            >
+                        </div>
+                        <div>
+                            <label for="conceptContent" class="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Concept Notes</label>
+                            <textarea 
+                                id="conceptContent" 
+                                rows="6"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none text-sm"
+                                placeholder="Summarise the idea in your own words"
+                                required
+                            ></textarea>
+                        </div>
+                        <div class="flex justify-end gap-2">
+                            <button 
+                                type="button" 
+                                id="conceptCancelBtn"
+                                class="hidden px-4 py-2 rounded-lg border border-gray-300 text-gray-600 text-sm hover:bg-gray-100 transition"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                type="submit" 
+                                id="conceptSaveBtn"
+                                class="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                            >
+                                Save Concept
+                            </button>
+                        </div>
+                        <p id="conceptStatus" class="text-xs text-gray-500"></p>
+                    </form>
+                    <div class="flex-1 overflow-y-auto p-4" id="conceptListContainer">
+                        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Saved Concepts</h3>
+                        <p id="conceptEmptyState" class="text-sm text-gray-400">No concepts saved yet.</p>
+                        <div id="conceptList" class="space-y-3"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -112,7 +173,7 @@
     
     <!-- Chat page logic -->
     <script>
-        // Check if user is logged in and has a session
+        // Ensure user session is present
         if (!Storage.isLoggedIn() || !Storage.getSessionId()) {
             window.location.href = 'index.html';
         }
@@ -131,61 +192,270 @@
         const instructionsContent = document.getElementById('instructionsContent');
         const dismissInstructions = document.getElementById('dismissInstructions');
 
-        // Display current model and user
+        const conceptForm = document.getElementById('conceptForm');
+        const conceptTitle = document.getElementById('conceptTitle');
+        const conceptContent = document.getElementById('conceptContent');
+        const conceptSaveBtn = document.getElementById('conceptSaveBtn');
+        const conceptCancelBtn = document.getElementById('conceptCancelBtn');
+        const conceptStatus = document.getElementById('conceptStatus');
+        const conceptList = document.getElementById('conceptList');
+        const conceptEmptyState = document.getElementById('conceptEmptyState');
+
+        let concepts = [];
+        let editingConceptId = null;
+        let conceptStatusTimer = null;
+
         const currentModel = Storage.getCurrentModel();
         modelName.textContent = `Model: ${currentModel}`;
         userEmail.textContent = Storage.getUserEmail();
 
-        // Display instructions
         instructionsContent.innerHTML = CONFIG.STUDY_INSTRUCTIONS;
-
-        // Dismiss instructions
         dismissInstructions.addEventListener('click', () => {
             instructionsCard.classList.add('hidden');
         });
 
-        // Create message bubble
+        function setConceptStatus(message, type = 'info') {
+            if (conceptStatusTimer) {
+                clearTimeout(conceptStatusTimer);
+                conceptStatusTimer = null;
+            }
+
+            const baseClasses = ['text-xs', 'mt-1'];
+            let colourClass = 'text-gray-500';
+            if (type === 'success') {
+                colourClass = 'text-emerald-600';
+            } else if (type === 'error') {
+                colourClass = 'text-red-600';
+            }
+
+            conceptStatus.className = [...baseClasses, colourClass].join(' ');
+            conceptStatus.textContent = message || '';
+
+            if (message) {
+                conceptStatusTimer = setTimeout(() => {
+                    conceptStatus.textContent = '';
+                    conceptStatusTimer = null;
+                }, 4000);
+            }
+        }
+
+        function resetConceptForm() {
+            editingConceptId = null;
+            conceptTitle.value = '';
+            conceptContent.value = '';
+            conceptSaveBtn.textContent = 'Save Concept';
+            conceptSaveBtn.disabled = false;
+            conceptCancelBtn.classList.add('hidden');
+            conceptCancelBtn.disabled = false;
+        }
+
+        function renderConcepts() {
+            conceptList.innerHTML = '';
+
+            if (!concepts.length) {
+                conceptEmptyState.classList.remove('hidden');
+                return;
+            }
+
+            conceptEmptyState.classList.add('hidden');
+
+            concepts.forEach((concept, index) => {
+                const card = document.createElement('article');
+                card.className = 'border border-gray-200 rounded-lg p-3 bg-white shadow-sm';
+
+                const header = document.createElement('div');
+                header.className = 'flex items-start justify-between gap-2';
+
+                const title = document.createElement('h4');
+                title.className = 'text-sm font-semibold text-gray-800';
+                title.textContent = concept.title || `Concept ${index + 1}`;
+
+                const actions = document.createElement('div');
+                actions.className = 'flex gap-2';
+
+                const editBtn = document.createElement('button');
+                editBtn.type = 'button';
+                editBtn.className = 'text-xs font-medium text-blue-600 hover:text-blue-700';
+                editBtn.textContent = 'Edit';
+                editBtn.addEventListener('click', () => startEditingConcept(concept));
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.type = 'button';
+                deleteBtn.className = 'text-xs font-medium text-red-600 hover:text-red-700';
+                deleteBtn.textContent = 'Delete';
+                deleteBtn.addEventListener('click', () => handleConceptDelete(concept.id));
+
+                actions.appendChild(editBtn);
+                actions.appendChild(deleteBtn);
+
+                header.appendChild(title);
+                header.appendChild(actions);
+
+                const content = document.createElement('p');
+                content.className = 'text-sm text-gray-700 whitespace-pre-wrap break-words mt-2';
+                content.textContent = concept.content;
+
+                const meta = document.createElement('p');
+                meta.className = 'text-xs text-gray-400 mt-2';
+                const createdAt = new Date(concept.created_at);
+                const updatedAt = new Date(concept.updated_at);
+                const isUpdated = updatedAt.getTime() !== createdAt.getTime();
+                meta.textContent = `${isUpdated ? 'Updated' : 'Saved'} ${updatedAt.toLocaleString()}`;
+
+                card.appendChild(header);
+                card.appendChild(content);
+                card.appendChild(meta);
+
+                if (concept.source_message_excerpt) {
+                    const source = document.createElement('p');
+                    source.className = 'text-xs text-gray-500 mt-2 italic';
+                    const roleLabel = concept.source_message_role === 'assistant' ? 'assistant' : 'you';
+                    source.textContent = `Referenced from ${roleLabel}: "${concept.source_message_excerpt}"`;
+                    card.appendChild(source);
+                }
+
+                conceptList.appendChild(card);
+            });
+        }
+
+        async function loadConcepts() {
+            try {
+                const sessionId = Storage.getSessionId();
+                if (!sessionId) {
+                    return;
+                }
+                const response = await API.getConcepts(sessionId);
+                concepts = response.concepts || [];
+                renderConcepts();
+            } catch (error) {
+                console.error('Error loading concepts:', error);
+                setConceptStatus('Could not load concepts. Please refresh to try again.', 'error');
+            }
+        }
+
+        function startEditingConcept(concept) {
+            editingConceptId = concept.id;
+            conceptTitle.value = concept.title || '';
+            conceptContent.value = concept.content;
+            conceptSaveBtn.textContent = 'Update Concept';
+            conceptCancelBtn.classList.remove('hidden');
+            conceptContent.focus();
+            setConceptStatus('Editing concept. Update the notes and press Update Concept to save.', 'info');
+        }
+
+        async function handleConceptDelete(conceptId) {
+            const confirmDelete = confirm('Delete this concept? This action cannot be undone.');
+            if (!confirmDelete) {
+                return;
+            }
+
+            try {
+                await API.deleteConcept(conceptId);
+                if (editingConceptId === conceptId) {
+                    resetConceptForm();
+                }
+                await loadConcepts();
+                setConceptStatus('Concept deleted.', 'success');
+            } catch (error) {
+                console.error('Error deleting concept:', error);
+                setConceptStatus(error.message || 'Failed to delete concept.', 'error');
+            }
+        }
+
+        conceptForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const sessionId = Storage.getSessionId();
+            if (!sessionId) {
+                setConceptStatus('Session missing. Please refresh the page.', 'error');
+                return;
+            }
+
+            const title = conceptTitle.value.trim();
+            const content = conceptContent.value.trim();
+
+            if (!content) {
+                setConceptStatus('Please add some concept notes before saving.', 'error');
+                conceptContent.focus();
+                return;
+            }
+
+            const payload = {
+                content,
+                title: title || null,
+            };
+
+            const isEditing = Boolean(editingConceptId);
+            const originalLabel = conceptSaveBtn.textContent;
+
+            conceptSaveBtn.disabled = true;
+            conceptSaveBtn.textContent = isEditing ? 'Updating...' : 'Saving...';
+            conceptCancelBtn.disabled = true;
+
+            try {
+                if (isEditing) {
+                    await API.updateConcept(editingConceptId, payload);
+                    setConceptStatus('Concept updated.', 'success');
+                } else {
+                    await API.createConcept(sessionId, payload);
+                    setConceptStatus('Concept saved.', 'success');
+                }
+
+                resetConceptForm();
+                await loadConcepts();
+            } catch (error) {
+                console.error('Error saving concept:', error);
+                setConceptStatus(error.message || 'Failed to save concept.', 'error');
+            } finally {
+                conceptSaveBtn.disabled = false;
+                conceptSaveBtn.textContent = originalLabel;
+                conceptCancelBtn.disabled = false;
+            }
+        });
+
+        conceptCancelBtn.addEventListener('click', () => {
+            resetConceptForm();
+            setConceptStatus('Editing cancelled.', 'info');
+        });
+
         function createMessageBubble(role, content, timestamp) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
-            
+
             const bubble = document.createElement('div');
             bubble.className = `max-w-[70%] rounded-lg px-4 py-3 ${
-                role === 'user' 
-                    ? 'bg-blue-600 text-white' 
+                role === 'user'
+                    ? 'bg-blue-600 text-white'
                     : 'bg-white border border-gray-200 text-gray-800'
             }`;
-            
+
             const text = document.createElement('p');
             text.className = 'text-sm whitespace-pre-wrap break-words';
             text.textContent = content;
-            
+
             bubble.appendChild(text);
-            
+
             if (timestamp) {
                 const time = document.createElement('p');
                 time.className = `text-xs mt-1 ${role === 'user' ? 'text-blue-100' : 'text-gray-400'}`;
                 time.textContent = new Date(timestamp).toLocaleTimeString();
                 bubble.appendChild(time);
             }
-            
+
             messageDiv.appendChild(bubble);
             return messageDiv;
         }
 
-        // Add message to UI
         function addMessage(role, content, timestamp) {
             const messageBubble = createMessageBubble(role, content, timestamp);
             messages.appendChild(messageBubble);
             scrollToBottom();
         }
 
-        // Scroll to bottom of messages
         function scrollToBottom() {
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 
-        // Show/hide typing indicator
         function setTyping(isTyping) {
             if (isTyping) {
                 typingIndicator.classList.remove('hidden');
@@ -195,81 +465,71 @@
             }
         }
 
-        // Handle message submission
-        messageForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
+        messageForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
             const message = messageInput.value.trim();
-            if (!message) return;
-            
-            // Disable input
+            if (!message) {
+                return;
+            }
+
             messageInput.disabled = true;
             sendBtn.disabled = true;
-            
-            // Add user message to UI
+
             addMessage('user', message, new Date().toISOString());
-            
-            // Clear input
             messageInput.value = '';
-            
-            // Show typing indicator
             setTyping(true);
-            
+
             try {
-                // Send message to API
                 const sessionId = Storage.getSessionId();
                 const response = await API.sendMessage(sessionId, message);
-                
-                // Hide typing indicator
                 setTyping(false);
-                
-                // Add assistant response to UI
                 addMessage('assistant', response.response, response.timestamp);
-                
             } catch (error) {
                 console.error('Error sending message:', error);
                 setTyping(false);
-                
-                // Show error message
                 addMessage('assistant', `Error: ${error.message}. Please try again.`, new Date().toISOString());
             } finally {
-                // Re-enable input
                 messageInput.disabled = false;
                 sendBtn.disabled = false;
                 messageInput.focus();
             }
         });
 
-        // Handle reset chat
         resetBtn.addEventListener('click', async () => {
-            if (!confirm('Are you sure you want to reset the chat? This will clear the conversation history.')) {
+            if (!confirm('Reset the chat? This will clear the conversation history but keep your saved concepts.')) {
                 return;
             }
-            
+
             try {
                 const sessionId = Storage.getSessionId();
                 const response = await API.resetSession(sessionId);
-                
-                // Update session ID
-                Storage.saveSession(response.new_session_id, currentModel);
-                
-                // Clear messages
+
+                const updatedSessionId = response.session_id ?? sessionId;
+                Storage.saveSession(updatedSessionId, currentModel);
                 messages.innerHTML = '';
-                
-                // Show success message
-                const successMsg = createMessageBubble('assistant', 'Chat has been reset. Starting fresh!', new Date().toISOString());
-                messages.appendChild(successMsg);
-                
-                // Show instructions again
+                const clearedMessages = response.cleared_messages ?? 0;
+                const resetNotice = clearedMessages > 0
+                    ? `Cleared ${clearedMessages} message${clearedMessages === 1 ? '' : 's'} from this session. Your saved concepts remain available.`
+                    : 'Chat context cleared. Your saved concepts remain available in the Concepts panel.';
+                addMessage('assistant', resetNotice, new Date().toISOString());
+                if (response.ollama_cleared === false) {
+                    addMessage('assistant', 'Note: Could not confirm the model cleared its internal context. If responses seem off, use "Start New Session" from the header.', new Date().toISOString());
+                }
+
                 instructionsCard.classList.remove('hidden');
-                
+
+                resetConceptForm();
+                concepts = [];
+                renderConcepts();
+                await loadConcepts();
+                setConceptStatus('Chat reset. Existing concepts are still here; capture new ideas as you go.', 'info');
             } catch (error) {
                 console.error('Error resetting session:', error);
                 alert('Failed to reset chat. Please try again.');
             }
         });
 
-        // Handle new session
         newSessionBtn.addEventListener('click', () => {
             if (confirm('Start a new session with a different model?')) {
                 Storage.clearSession();
@@ -277,11 +537,11 @@
             }
         });
 
-        // Initialize: Show welcome message
-        addMessage('assistant', `Hello! I'm ready to help you with your design ideation. Feel free to ask me anything!`, new Date().toISOString());
-        
-        // Focus on input
+        addMessage('assistant', 'Hello! I\'m ready to help you with your design ideation. Feel free to ask me anything!', new Date().toISOString());
         messageInput.focus();
+
+        loadConcepts();
+        setConceptStatus('Use the Concepts panel to capture the ideas you want to keep.', 'info');
     </script>
 </body>
 </html>

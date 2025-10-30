@@ -12,6 +12,8 @@ const API_ENDPOINTS = {
     session: `${API_BASE_URL}/api/session`,
     chat: `${API_BASE_URL}/api/chat`,
     reset: `${API_BASE_URL}/api/reset`,
+    concepts: `${API_BASE_URL}/api/concepts`,
+    sessionConcepts: (sessionId) => `${API_BASE_URL}/api/session/${sessionId}/concepts`,
     health: `${API_BASE_URL}/health`,
 };
 
@@ -37,6 +39,7 @@ const STUDY_INSTRUCTIONS = `
     <li>Feel free to ask questions and build on ideas</li>
     <li>Use "Reset Chat" to clear the conversation and start fresh with the same model</li>
     <li>Use "New Session" to return to model selection and try a different model</li>
+    <li>Capture your favourite ideas in the Concepts panel on the right</li>
 </ul>
 <p class="mt-3 text-sm text-gray-600">All conversations are automatically saved for research purposes.</p>
 `;
