@@ -6,7 +6,7 @@ from collections import Counter
 from flask import Blueprint, jsonify
 
 from backend.database import get_db_session
-from backend.models import User, Session, Message
+from backend.models import User, Session, Message, Concept
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -57,14 +57,16 @@ def export_data():
         db = get_db_session()
         
         try:
-            # Fetch users, sessions and messages ordered by time for readability
+            # Fetch users, sessions, messages and concepts ordered by time for readability
             users = db.query(User).order_by(User.created_at).all()
             sessions = db.query(Session).order_by(Session.created_at).all()
             messages = db.query(Message).order_by(Message.timestamp).all()
+            concepts = db.query(Concept).order_by(Concept.created_at).all()
 
             # Build lookup for sessions per user and messages per session
             sessions_by_user = {}
             session_lookup = {}
+            message_lookup = {}
 
             for session in sessions:
                 session_dict = {
@@ -72,7 +74,9 @@ def export_data():
                     'model_name': session.model_name,
                     'created_at': session.created_at.isoformat(),
                     'message_count': 0,
-                    'messages': []
+                    'messages': [],
+                    'concept_count': 0,
+                    'concepts': []
                 }
                 session_lookup[session.id] = session_dict
                 sessions_by_user.setdefault(session.user_id, []).append(session_dict)
@@ -81,6 +85,7 @@ def export_data():
                 session_dict = session_lookup.get(message.session_id)
                 if not session_dict:
                     continue
+                message_lookup[message.id] = message
                 session_dict['messages'].append({
                     'id': message.id,
                     'role': message.role,
@@ -91,14 +96,42 @@ def export_data():
             for session_dict in session_lookup.values():
                 session_dict['message_count'] = len(session_dict['messages'])
 
+            for concept in concepts:
+                session_dict = session_lookup.get(concept.session_id)
+                if not session_dict:
+                    continue
+
+                source_excerpt = None
+                source_role = None
+                if concept.source_message_id and concept.source_message_id in message_lookup:
+                    message = message_lookup[concept.source_message_id]
+                    source_excerpt = message.content[:200]
+                    source_role = message.role
+
+                session_dict['concepts'].append({
+                    'id': concept.id,
+                    'title': concept.title,
+                    'content': concept.content,
+                    'created_at': concept.created_at.isoformat(),
+                    'updated_at': concept.updated_at.isoformat(),
+                    'source_message_id': concept.source_message_id,
+                    'source_message_excerpt': source_excerpt,
+                    'source_message_role': source_role
+                })
+
+            for session_dict in session_lookup.values():
+                session_dict['concept_count'] = len(session_dict['concepts'])
+
             users_data = []
             for user in users:
                 user_sessions = sessions_by_user.get(user.id, [])
+                concept_total = sum(session['concept_count'] for session in user_sessions)
                 users_data.append({
                     'id': user.id,
                     'email': user.email,
                     'created_at': user.created_at.isoformat(),
                     'session_count': len(user_sessions),
+                    'concept_count': concept_total,
                     'sessions': user_sessions
                 })
 
@@ -106,6 +139,7 @@ def export_data():
                 'total_users': len(users),
                 'total_sessions': len(sessions),
                 'total_messages': len(messages),
+                'total_concepts': len(concepts),
                 'sessions_by_model': dict(Counter(session.model_name for session in sessions))
             }
 
@@ -147,6 +181,7 @@ def get_stats():
             total_users = db.query(func.count(User.id)).scalar()
             total_sessions = db.query(func.count(Session.id)).scalar()
             total_messages = db.query(func.count(Message.id)).scalar()
+            total_concepts = db.query(func.count(Concept.id)).scalar()
             
             # Sessions by model
             sessions_by_model = {}
@@ -158,11 +193,22 @@ def get_stats():
             for model_name, count in model_counts:
                 sessions_by_model[model_name] = count
             
+            concepts_by_model = {}
+            concept_counts = db.query(
+                Session.model_name,
+                func.count(Concept.id)
+            ).join(Concept, Concept.session_id == Session.id).group_by(Session.model_name).all()
+
+            for model_name, count in concept_counts:
+                concepts_by_model[model_name] = count
+
             return jsonify({
                 'total_users': total_users,
                 'total_sessions': total_sessions,
                 'total_messages': total_messages,
-                'sessions_by_model': sessions_by_model
+                'total_concepts': total_concepts,
+                'sessions_by_model': sessions_by_model,
+                'concepts_by_model': concepts_by_model
             }), 200
             
         finally:

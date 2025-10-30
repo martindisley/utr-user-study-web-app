@@ -1,7 +1,7 @@
 """
 Database initialization and management.
 """
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text, inspect
 from sqlalchemy.orm import sessionmaker, scoped_session
 from backend.models import Base
 from backend import config
@@ -30,7 +30,22 @@ def init_db():
     
     # Create all tables
     Base.metadata.create_all(bind=engine)
+
+    _run_migrations()
     print(f"Database initialized at {config.DATABASE_PATH}")
+
+
+def _run_migrations():
+    """Apply lightweight schema migrations for new columns."""
+    inspector = inspect(engine)
+    if 'sessions' not in inspector.get_table_names():
+        return
+
+    session_columns = {col['name'] for col in inspector.get_columns('sessions')}
+    if 'context_reset_at' not in session_columns:
+        with engine.begin() as connection:
+            connection.execute(text('ALTER TABLE sessions ADD COLUMN context_reset_at DATETIME'))
+            connection.execute(text('UPDATE sessions SET context_reset_at = created_at WHERE context_reset_at IS NULL'))
 
 
 def get_db():
