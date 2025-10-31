@@ -12,8 +12,11 @@ const API_ENDPOINTS = {
     session: `${API_BASE_URL}/api/session`,
     chat: `${API_BASE_URL}/api/chat`,
     reset: `${API_BASE_URL}/api/reset`,
-    concepts: `${API_BASE_URL}/api/concepts`,
-    sessionConcepts: (sessionId) => `${API_BASE_URL}/api/session/${sessionId}/concepts`,
+    endSession: `${API_BASE_URL}/api/end-session`,
+    prompts: `${API_BASE_URL}/api/prompts`,
+    sessionPrompts: (sessionId) => `${API_BASE_URL}/api/session/${sessionId}/prompts`,
+    images: (sessionId) => `${API_BASE_URL}/api/images/${sessionId}`,
+    imageFile: (imageId) => `${API_BASE_URL}/api/image-file/${imageId}`,
     health: `${API_BASE_URL}/health`,
 };
 
@@ -32,14 +35,14 @@ const APP_CONFIG = {
 // Study Instructions (displayed in chat interface)
 const STUDY_INSTRUCTIONS = `
 <h3 class="font-semibold text-lg mb-2">Welcome to the User Study</h3>
-<p class="mb-3">Thank you for participating in this design ideation study. You will be using this chat interface to explore ideas with an AI assistant.</p>
+<p class="mb-3">Thank you for participating in this image generation prompt study. You will be using this chat interface to develop prompts with an AI assistant.</p>
 <h4 class="font-semibold mb-1">Instructions:</h4>
 <ul class="list-disc list-inside space-y-1 text-sm">
-    <li>Engage naturally with the AI to explore design concepts</li>
-    <li>Feel free to ask questions and build on ideas</li>
+    <li>Engage naturally with the AI to explore prompt ideas</li>
+    <li>Feel free to ask questions and refine your prompts</li>
     <li>Use "Reset Chat" to clear the conversation and start fresh with the same model</li>
-    <li>Use "New Session" to return to model selection and try a different model</li>
-    <li>Capture your favourite ideas in the Concepts panel on the right</li>
+    <li>Capture your prompts in the Prompts panel on the right</li>
+    <li>When done, click "End Session & Generate Images" to see your generated images</li>
 </ul>
 <p class="mt-3 text-sm text-gray-600">All conversations are automatically saved for research purposes.</p>
 `;

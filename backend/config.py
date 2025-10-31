@@ -15,6 +15,12 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 # Ollama configuration
 OLLAMA_HOST = os.environ.get('OLLAMA_HOST', 'http://localhost:11434')
 
+# Replicate configuration
+REPLICATE_API_TOKEN = os.environ.get('REPLICATE_API_TOKEN', '')
+
+# Image storage
+IMAGES_DIR = os.path.join(PROJECT_ROOT, 'data', 'images')
+
 # Available models for the study
 AVAILABLE_MODELS = [
     {

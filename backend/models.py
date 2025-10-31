@@ -41,7 +41,8 @@ class Session(Base):
     # Relationships
     user = relationship('User', back_populates='sessions')
     messages = relationship('Message', back_populates='session', cascade='all, delete-orphan')
-    concepts = relationship('Concept', back_populates='session', cascade='all, delete-orphan')
+    prompts = relationship('Prompt', back_populates='session', cascade='all, delete-orphan')
+    generated_images = relationship('GeneratedImage', back_populates='session', cascade='all, delete-orphan')
     
     def to_dict(self, include_messages=False):
         """Convert session to dictionary."""
@@ -69,7 +70,7 @@ class Message(Base):
     
     # Relationships
     session = relationship('Session', back_populates='messages')
-    concepts = relationship('Concept', back_populates='source_message', cascade='all, delete-orphan')
+    prompts = relationship('Prompt', back_populates='source_message', cascade='all, delete-orphan')
     
     def to_dict(self):
         """Convert message to dictionary."""
@@ -82,9 +83,9 @@ class Message(Base):
         }
 
 
-class Concept(Base):
-    """Concept model - captures participant-selected concepts for a session."""
-    __tablename__ = 'concepts'
+class Prompt(Base):
+    """Prompt model - captures participant-created image generation prompts for a session."""
+    __tablename__ = 'prompts'
 
     id = Column(Integer, primary_key=True)
     session_id = Column(Integer, ForeignKey('sessions.id'), nullable=False, index=True)
@@ -95,11 +96,12 @@ class Concept(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, nullable=False, onupdate=datetime.utcnow)
 
     # Relationships
-    session = relationship('Session', back_populates='concepts')
-    source_message = relationship('Message', back_populates='concepts')
+    session = relationship('Session', back_populates='prompts')
+    source_message = relationship('Message', back_populates='prompts')
+    generated_images = relationship('GeneratedImage', back_populates='prompt', cascade='all, delete-orphan')
 
     def to_dict(self):
-        """Convert concept to dictionary."""
+        """Convert prompt to dictionary."""
         excerpt = None
         source_role = None
         if self.source_message:
@@ -117,3 +119,30 @@ class Concept(Base):
             'source_message_excerpt': excerpt,
             'source_message_role': source_role
         }
+
+
+class GeneratedImage(Base):
+    """GeneratedImage model - stores information about images generated from prompts."""
+    __tablename__ = 'generated_images'
+
+    id = Column(Integer, primary_key=True)
+    session_id = Column(Integer, ForeignKey('sessions.id'), nullable=False, index=True)
+    prompt_id = Column(Integer, ForeignKey('prompts.id'), nullable=False, index=True)
+    image_path = Column(String(500), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    # Relationships
+    session = relationship('Session', back_populates='generated_images')
+    prompt = relationship('Prompt', back_populates='generated_images')
+
+    def to_dict(self):
+        """Convert generated image to dictionary."""
+        return {
+            'id': self.id,
+            'session_id': self.session_id,
+            'prompt_id': self.prompt_id,
+            'image_path': self.image_path,
+            'created_at': self.created_at.isoformat(),
+            'prompt_content': self.prompt.content if self.prompt else None
+        }
+

@@ -63,7 +63,7 @@
                         id="newSessionBtn"
                         class="inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition-colors"
                     >
-                        Start New Session
+                        End Session & Generate Images
                     </button>
                 </div>
             </div>
@@ -132,57 +132,57 @@
                         </div>
                     </section>
 
-                    <aside id="conceptPanel" class="w-full lg:w-80 xl:w-96 flex flex-col rounded-2xl border border-gray-200 bg-white shadow-sm flex-shrink-0 overflow-hidden">
+                    <aside id="promptPanel" class="w-full lg:w-80 xl:w-96 flex flex-col rounded-2xl border border-gray-200 bg-white shadow-sm flex-shrink-0 overflow-hidden">
                         <div class="border-b border-gray-200 px-5 py-5">
                             <div class="flex items-center justify-between mb-1">
-                                <h2 class="text-base font-semibold text-gray-900">Concepts</h2>
-                                <span class="text-xs font-medium text-gray-500" id="conceptCount">&nbsp;</span>
+                                <h2 class="text-base font-semibold text-gray-900">Image Prompts</h2>
+                                <span class="text-xs font-medium text-gray-500" id="promptCount">&nbsp;</span>
                             </div>
-                            <p class="text-sm text-gray-600">Capture the ideas you want to keep from this exploration.</p>
+                            <p class="text-sm text-gray-600">Capture image generation prompts you want to use.</p>
                         </div>
                         <div class="flex-1 flex flex-col overflow-hidden min-h-0">
-                            <form id="conceptForm" class="border-b border-gray-200 p-5 space-y-4">
+                            <form id="promptForm" class="border-b border-gray-200 p-5 space-y-4">
                                 <div class="space-y-2">
-                                    <label for="conceptTitle" class="text-sm font-medium text-gray-700">Title (optional)</label>
+                                    <label for="promptTitle" class="text-sm font-medium text-gray-700">Title (optional)</label>
                                     <input
                                         type="text"
-                                        id="conceptTitle"
+                                        id="promptTitle"
                                         maxlength="150"
                                         class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-900"
-                                        placeholder="Give this idea a working title"
+                                        placeholder="Give this prompt a working title"
                                     >
                                 </div>
                                 <div class="space-y-2">
-                                    <label for="conceptContent" class="text-sm font-medium text-gray-700">Concept notes</label>
+                                    <label for="promptContent" class="text-sm font-medium text-gray-700">Prompt text</label>
                                     <textarea
-                                        id="conceptContent"
+                                        id="promptContent"
                                         rows="6"
                                         class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-900"
-                                        placeholder="Summarise the concept in your own words"
+                                        placeholder="Write your image generation prompt"
                                         required
                                     ></textarea>
                                 </div>
                                 <div class="flex justify-end gap-2">
                                     <button
                                         type="button"
-                                        id="conceptCancelBtn"
+                                        id="promptCancelBtn"
                                         class="hidden px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:border-gray-300 hover:text-gray-900 transition-colors"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         type="submit"
-                                        id="conceptSaveBtn"
+                                        id="promptSaveBtn"
                                         class="px-4 py-2.5 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                                     >
-                                        Save Concept
+                                        Save Prompt
                                     </button>
                                 </div>
-                                <p id="conceptStatus" class="text-xs text-gray-500"></p>
+                                <p id="promptStatus" class="text-xs text-gray-500"></p>
                             </form>
-                            <div class="flex-1 overflow-y-auto p-5 space-y-4" id="conceptListContainer">
-                                <div id="conceptEmptyState" class="text-sm text-gray-400">No concepts saved yet.</div>
-                                <div id="conceptList" class="space-y-4"></div>
+                            <div class="flex-1 overflow-y-auto p-5 space-y-4" id="promptListContainer">
+                                <div id="promptEmptyState" class="text-sm text-gray-400">No prompts saved yet.</div>
+                                <div id="promptList" class="space-y-4"></div>
                             </div>
                         </div>
                     </aside>
@@ -218,19 +218,19 @@
         const instructionsContent = document.getElementById('instructionsContent');
         const dismissInstructions = document.getElementById('dismissInstructions');
 
-    const conceptForm = document.getElementById('conceptForm');
-        const conceptTitle = document.getElementById('conceptTitle');
-        const conceptContent = document.getElementById('conceptContent');
-        const conceptSaveBtn = document.getElementById('conceptSaveBtn');
-        const conceptCancelBtn = document.getElementById('conceptCancelBtn');
-        const conceptStatus = document.getElementById('conceptStatus');
-        const conceptList = document.getElementById('conceptList');
-        const conceptEmptyState = document.getElementById('conceptEmptyState');
-    const conceptCount = document.getElementById('conceptCount');
+    const promptForm = document.getElementById('promptForm');
+        const promptTitle = document.getElementById('promptTitle');
+        const promptContent = document.getElementById('promptContent');
+        const promptSaveBtn = document.getElementById('promptSaveBtn');
+        const promptCancelBtn = document.getElementById('promptCancelBtn');
+        const promptStatus = document.getElementById('promptStatus');
+        const promptList = document.getElementById('promptList');
+        const promptEmptyState = document.getElementById('promptEmptyState');
+    const promptCount = document.getElementById('promptCount');
 
-        let concepts = [];
-        let editingConceptId = null;
-        let conceptStatusTimer = null;
+        let prompts = [];
+        let editingPromptId = null;
+        let promptStatusTimer = null;
 
         const currentModel = Storage.getCurrentModel();
         modelName.textContent = `Model: ${currentModel}`;
@@ -241,10 +241,10 @@
             instructionsCard.classList.add('hidden');
         });
 
-        function setConceptStatus(message, type = 'info') {
-            if (conceptStatusTimer) {
-                clearTimeout(conceptStatusTimer);
-                conceptStatusTimer = null;
+        function setPromptStatus(message, type = 'info') {
+            if (promptStatusTimer) {
+                clearTimeout(promptStatusTimer);
+                promptStatusTimer = null;
             }
 
             const baseClasses = ['text-xs', 'mt-1'];
@@ -255,44 +255,44 @@
                 colourClass = 'text-red-600';
             }
 
-            conceptStatus.className = [...baseClasses, colourClass].join(' ');
-            conceptStatus.textContent = message || '';
+            promptStatus.className = [...baseClasses, colourClass].join(' ');
+            promptStatus.textContent = message || '';
 
             if (message) {
-                conceptStatusTimer = setTimeout(() => {
-                    conceptStatus.textContent = '';
-                    conceptStatusTimer = null;
+                promptStatusTimer = setTimeout(() => {
+                    promptStatus.textContent = '';
+                    promptStatusTimer = null;
                 }, 4000);
             }
         }
 
-        function resetConceptForm() {
-            editingConceptId = null;
-            conceptTitle.value = '';
-            conceptContent.value = '';
-            conceptSaveBtn.textContent = 'Save Concept';
-            conceptSaveBtn.disabled = false;
-            conceptCancelBtn.classList.add('hidden');
-            conceptCancelBtn.disabled = false;
+        function resetPromptForm() {
+            editingPromptId = null;
+            promptTitle.value = '';
+            promptContent.value = '';
+            promptSaveBtn.textContent = 'Save Prompt';
+            promptSaveBtn.disabled = false;
+            promptCancelBtn.classList.add('hidden');
+            promptCancelBtn.disabled = false;
         }
 
-        function renderConcepts() {
-            conceptList.innerHTML = '';
+        function renderPrompts() {
+            promptList.innerHTML = '';
 
-            if (!concepts.length) {
-                conceptEmptyState.classList.remove('hidden');
-                if (conceptCount) {
-                    conceptCount.textContent = '0';
+            if (!prompts.length) {
+                promptEmptyState.classList.remove('hidden');
+                if (promptCount) {
+                    promptCount.textContent = '0';
                 }
                 return;
             }
 
-            conceptEmptyState.classList.add('hidden');
-            if (conceptCount) {
-                conceptCount.textContent = concepts.length.toString();
+            promptEmptyState.classList.add('hidden');
+            if (promptCount) {
+                promptCount.textContent = prompts.length.toString();
             }
 
-            concepts.forEach((concept, index) => {
+            prompts.forEach((prompt, index) => {
                 const card = document.createElement('article');
                 card.className = 'border border-gray-200 rounded-xl p-4 bg-white hover:border-gray-300 transition-colors';
 
@@ -301,7 +301,7 @@
 
                 const title = document.createElement('h4');
                 title.className = 'text-sm font-semibold text-gray-800';
-                title.textContent = concept.title || `Concept ${index + 1}`;
+                title.textContent = prompt.title || `Prompt ${index + 1}`;
 
                 const actions = document.createElement('div');
                 actions.className = 'flex gap-2';
@@ -312,7 +312,7 @@
                 editBtn.textContent = 'Edit';
                 editBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    startEditingConcept(concept);
+                    startEditingPrompt(prompt);
                 });
 
                 const deleteBtn = document.createElement('button');
@@ -321,7 +321,7 @@
                 deleteBtn.textContent = 'Delete';
                 deleteBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    handleConceptDelete(concept.id);
+                    handlePromptDelete(prompt.id);
                 });
 
                 actions.appendChild(editBtn);
@@ -332,12 +332,12 @@
 
                 const content = document.createElement('p');
                 content.className = 'text-sm text-gray-700 whitespace-pre-wrap break-words mt-2';
-                content.textContent = concept.content;
+                content.textContent = prompt.content;
 
                 const meta = document.createElement('p');
                 meta.className = 'text-xs text-gray-400 mt-2';
-                const createdAt = new Date(concept.created_at);
-                const updatedAt = new Date(concept.updated_at);
+                const createdAt = new Date(prompt.created_at);
+                const updatedAt = new Date(prompt.updated_at);
                 const isUpdated = updatedAt.getTime() !== createdAt.getTime();
                 meta.textContent = `${isUpdated ? 'Updated' : 'Saved'} ${updatedAt.toLocaleString()}`;
 
@@ -345,72 +345,72 @@
                 card.appendChild(content);
                 card.appendChild(meta);
 
-                if (concept.source_message_excerpt) {
+                if (prompt.source_message_excerpt) {
                     const source = document.createElement('p');
                     source.className = 'text-xs text-gray-500 mt-2 italic';
-                    const roleLabel = concept.source_message_role === 'assistant' ? 'assistant' : 'you';
-                    source.textContent = `Referenced from ${roleLabel}: "${concept.source_message_excerpt}"`;
+                    const roleLabel = prompt.source_message_role === 'assistant' ? 'assistant' : 'you';
+                    source.textContent = `Referenced from ${roleLabel}: "${prompt.source_message_excerpt}"`;
                     card.appendChild(source);
                 }
 
-                conceptList.appendChild(card);
+                promptList.appendChild(card);
             });
         }
 
-        async function loadConcepts() {
+        async function loadPrompts() {
             try {
                 const sessionId = Storage.getSessionId();
                 if (!sessionId) {
                     return;
                 }
-                const response = await API.getConcepts(sessionId);
-                concepts = response.concepts || [];
-                renderConcepts();
+                const response = await API.getPrompts(sessionId);
+                prompts = response.prompts || [];
+                renderPrompts();
             } catch (error) {
-                console.error('Error loading concepts:', error);
-                setConceptStatus('Could not load concepts. Please refresh to try again.', 'error');
+                console.error('Error loading prompts:', error);
+                setPromptStatus('Could not load prompts. Please refresh to try again.', 'error');
             }
         }
 
-        function startEditingConcept(concept) {
-            editingConceptId = concept.id;
-            conceptTitle.value = concept.title || '';
-            conceptContent.value = concept.content;
-            conceptSaveBtn.textContent = 'Update Concept';
-            conceptCancelBtn.classList.remove('hidden');
-            conceptContent.focus();
-            setConceptStatus('Editing concept. Update the notes and press Update Concept to save.', 'info');
+        function startEditingPrompt(prompt) {
+            editingPromptId = prompt.id;
+            promptTitle.value = prompt.title || '';
+            promptContent.value = prompt.content;
+            promptSaveBtn.textContent = 'Update Prompt';
+            promptCancelBtn.classList.remove('hidden');
+            promptContent.focus();
+            setPromptStatus('Editing prompt. Update the notes and press Update Prompt to save.', 'info');
         }
 
-        async function handleConceptDelete(conceptId) {
+        async function handlePromptDelete(promptId) {
             try {
-                await API.deleteConcept(conceptId);
-                if (editingConceptId === conceptId) {
-                    resetConceptForm();
+                await API.deletePrompt(promptId);
+                if (editingPromptId === promptId) {
+                    resetPromptForm();
                 }
-                await loadConcepts();
-                setConceptStatus('Concept deleted.', 'success');
+                await loadPrompts();
+                setPromptStatus('Prompt deleted.', 'success');
             } catch (error) {
-                console.error('Error deleting concept:', error);
-                setConceptStatus(error.message || 'Failed to delete concept.', 'error');
+                console.error('Error deleting prompt:', error);
+                setPromptStatus(error.message || 'Failed to delete prompt.', 'error');
             }
         }
 
-        conceptForm.addEventListener('submit', async (event) => {
+        promptForm.addEventListener('submit', async (event) => {
             event.preventDefault();
 
             const sessionId = Storage.getSessionId();
             if (!sessionId) {
-                setConceptStatus('Session missing. Please refresh the page.', 'error');
+                setPromptStatus('Session missing. Please refresh the page.', 'error');
                 return;
             }
 
-            const title = conceptTitle.value.trim();
-            const content = conceptContent.value.trim();
+            const title = promptTitle.value.trim();
+            const content = promptContent.value.trim();
 
             if (!content) {
-                setConceptStatus('Please add some concept notes before saving.', 'error');
-                conceptContent.focus();
+                setPromptStatus('Please add some concept notes before saving.', 'error');
+                promptContent.focus();
                 return;
             }
 
@@ -419,37 +419,37 @@
                 title: title || null,
             };
 
-            const isEditing = Boolean(editingConceptId);
-            const originalLabel = conceptSaveBtn.textContent;
+            const isEditing = Boolean(editingPromptId);
+            const originalLabel = promptSaveBtn.textContent;
 
-            conceptSaveBtn.disabled = true;
-            conceptSaveBtn.textContent = isEditing ? 'Updating...' : 'Saving...';
-            conceptCancelBtn.disabled = true;
+            promptSaveBtn.disabled = true;
+            promptSaveBtn.textContent = isEditing ? 'Updating...' : 'Saving...';
+            promptCancelBtn.disabled = true;
 
             try {
                 if (isEditing) {
-                    await API.updateConcept(editingConceptId, payload);
-                    setConceptStatus('Concept updated.', 'success');
+                    await API.updatePrompt(editingPromptId, payload);
+                    setPromptStatus('Prompt updated.', 'success');
                 } else {
-                    await API.createConcept(sessionId, payload);
-                    setConceptStatus('Concept saved.', 'success');
+                    await API.createPrompt(sessionId, payload);
+                    setPromptStatus('Prompt saved.', 'success');
                 }
 
-                resetConceptForm();
-                await loadConcepts();
+                resetPromptForm();
+                await loadPrompts();
             } catch (error) {
                 console.error('Error saving concept:', error);
-                setConceptStatus(error.message || 'Failed to save concept.', 'error');
+                setPromptStatus(error.message || 'Failed to save prompt.', 'error');
             } finally {
-                conceptSaveBtn.disabled = false;
-                conceptSaveBtn.textContent = originalLabel;
-                conceptCancelBtn.disabled = false;
+                promptSaveBtn.disabled = false;
+                promptSaveBtn.textContent = originalLabel;
+                promptCancelBtn.disabled = false;
             }
         });
 
-        conceptCancelBtn.addEventListener('click', () => {
-            resetConceptForm();
-            setConceptStatus('Editing cancelled.', 'info');
+        promptCancelBtn.addEventListener('click', () => {
+            resetPromptForm();
+            setPromptStatus('Editing cancelled.', 'info');
         });
 
         function createMessageBubble(role, content, timestamp) {
@@ -577,36 +577,67 @@
                 messages.innerHTML = '';
                 const clearedMessages = response.cleared_messages ?? 0;
                 const resetNotice = clearedMessages > 0
-                    ? `Cleared ${clearedMessages} message${clearedMessages === 1 ? '' : 's'} from this session. Your saved concepts remain available.`
-                    : 'Chat context cleared. Your saved concepts remain available in the Concepts panel.';
+                    ? `Cleared ${clearedMessages} message${clearedMessages === 1 ? '' : 's'} from this session. Your saved prompts remain available.`
+                    : 'Chat context cleared. Your saved prompts remain available in the Prompts panel.';
                 addMessage('assistant', resetNotice, new Date().toISOString());
                 if (response.ollama_cleared === false) {
-                    addMessage('assistant', 'Note: Could not confirm the model cleared its internal context. If responses seem off, use "Start New Session" from the header.', new Date().toISOString());
+                    addMessage('assistant', 'Note: Could not confirm the model cleared its internal context. If responses seem off, use "End Session & Generate Images" from the header.', new Date().toISOString());
                 }
 
                 instructionsCard.classList.remove('hidden');
 
-                resetConceptForm();
-                concepts = [];
-                renderConcepts();
-                await loadConcepts();
-                setConceptStatus('Chat reset. Existing concepts are still here; capture new ideas as you go.', 'info');
+                resetPromptForm();
+                prompts = [];
+                renderPrompts();
+                await loadPrompts();
+                setPromptStatus('Chat reset. Existing prompts are still here; capture new ideas as you go.', 'info');
             } catch (error) {
                 console.error('Error resetting session:', error);
                 alert('Failed to reset chat. Please try again.');
             }
         });
 
-        newSessionBtn.addEventListener('click', () => {
-            Storage.clearSession();
-            window.location.href = 'select-model.html';
+        newSessionBtn.addEventListener('click', async () => {
+            const sessionId = Storage.getSessionId();
+            
+            // Check if there are any prompts
+            if (!prompts || prompts.length === 0) {
+                if (!confirm('You haven\'t saved any prompts yet. Are you sure you want to end this session?')) {
+                    return;
+                }
+                // No prompts, just go to model selection
+                Storage.clearSession();
+                window.location.href = 'select-model.html';
+                return;
+            }
+            
+            // Disable button and show loading state
+            newSessionBtn.disabled = true;
+            newSessionBtn.textContent = 'Generating images...';
+            
+            try {
+                // Call end session API which triggers image generation
+                const response = await API.endSession(sessionId);
+                
+                if (response.success) {
+                    // Navigate to gallery page with session ID
+                    window.location.href = `gallery.html?session=${sessionId}`;
+                } else {
+                    throw new Error(response.message || 'Failed to end session');
+                }
+            } catch (error) {
+                console.error('Error ending session:', error);
+                alert('Failed to generate images. Please try again.');
+                newSessionBtn.disabled = false;
+                newSessionBtn.textContent = 'End Session & Generate Images';
+            }
         });
 
-        addMessage('assistant', 'Hello! I\'m ready to help you with your design ideation. Feel free to ask me anything!', new Date().toISOString());
+        addMessage('assistant', 'Hello! I\'m ready to help you develop image generation prompts. Feel free to ask me anything!', new Date().toISOString());
         messageInput.focus();
 
-        loadConcepts();
-        setConceptStatus('Use the Concepts panel to capture the ideas you want to keep.', 'info');
+        loadPrompts();
+        setPromptStatus('Use the Prompts panel to capture the prompts you want to keep.', 'info');
     </script>
 </body>
 </html>

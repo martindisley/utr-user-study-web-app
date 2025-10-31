@@ -4,6 +4,8 @@
  */
 
 const API = {
+    baseURL: CONFIG.API_BASE_URL,
+    
     /**
      * Login with email
      * @param {string} email - User's email address
@@ -137,28 +139,28 @@ const API = {
     },
 
     /**
-     * Get concepts saved for a session
+     * Get prompts saved for a session
      * @param {number} sessionId - Session ID
-     * @returns {Promise<Object>} { concepts: [...] }
+     * @returns {Promise<Object>} { prompts: [...] }
      */
-    async getConcepts(sessionId) {
-        const response = await fetch(CONFIG.API_ENDPOINTS.sessionConcepts(sessionId));
+    async getPrompts(sessionId) {
+        const response = await fetch(CONFIG.API_ENDPOINTS.sessionPrompts(sessionId));
 
         if (!response.ok) {
-            throw new Error('Failed to fetch concepts');
+            throw new Error('Failed to fetch prompts');
         }
 
         return await response.json();
     },
 
     /**
-     * Create a new concept for a session
+     * Create a new prompt for a session
      * @param {number} sessionId - Session ID
      * @param {Object} payload - { title, content, source_message_id }
-     * @returns {Promise<Object>} Concept data
+     * @returns {Promise<Object>} Prompt data
      */
-    async createConcept(sessionId, payload) {
-        const response = await fetch(CONFIG.API_ENDPOINTS.sessionConcepts(sessionId), {
+    async createPrompt(sessionId, payload) {
+        const response = await fetch(CONFIG.API_ENDPOINTS.sessionPrompts(sessionId), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -170,9 +172,9 @@ const API = {
             const message = await response.text();
             try {
                 const error = JSON.parse(message || '{}');
-                throw new Error(error.error || 'Failed to save concept');
+                throw new Error(error.error || 'Failed to save prompt');
             } catch (parseError) {
-                throw new Error(message || 'Failed to save concept');
+                throw new Error(message || 'Failed to save prompt');
             }
         }
 
@@ -180,13 +182,13 @@ const API = {
     },
 
     /**
-     * Update an existing concept
-     * @param {number} conceptId - Concept ID
-     * @param {Object} payload - Updated concept data
-     * @returns {Promise<Object>} Updated concept
+     * Update an existing prompt
+     * @param {number} promptId - Prompt ID
+     * @param {Object} payload - Updated prompt data
+     * @returns {Promise<Object>} Updated prompt
      */
-    async updateConcept(conceptId, payload) {
-        const response = await fetch(`${CONFIG.API_ENDPOINTS.concepts}/${conceptId}`, {
+    async updatePrompt(promptId, payload) {
+        const response = await fetch(`${CONFIG.API_ENDPOINTS.prompts}/${promptId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -198,9 +200,9 @@ const API = {
             const message = await response.text();
             try {
                 const error = JSON.parse(message || '{}');
-                throw new Error(error.error || 'Failed to update concept');
+                throw new Error(error.error || 'Failed to update prompt');
             } catch (parseError) {
-                throw new Error(message || 'Failed to update concept');
+                throw new Error(message || 'Failed to update prompt');
             }
         }
 
@@ -208,12 +210,12 @@ const API = {
     },
 
     /**
-     * Delete a concept
-     * @param {number} conceptId - Concept ID
+     * Delete a prompt
+     * @param {number} promptId - Prompt ID
      * @returns {Promise<Object>} { success: true }
      */
-    async deleteConcept(conceptId) {
-        const response = await fetch(`${CONFIG.API_ENDPOINTS.concepts}/${conceptId}`, {
+    async deletePrompt(promptId) {
+        const response = await fetch(`${CONFIG.API_ENDPOINTS.prompts}/${promptId}`, {
             method: 'DELETE',
         });
 
@@ -221,10 +223,54 @@ const API = {
             const message = await response.text();
             try {
                 const error = JSON.parse(message || '{}');
-                throw new Error(error.error || 'Failed to delete concept');
+                throw new Error(error.error || 'Failed to delete prompt');
             } catch (parseError) {
-                throw new Error(message || 'Failed to delete concept');
+                throw new Error(message || 'Failed to delete prompt');
             }
+        }
+
+        return await response.json();
+    },
+
+    /**
+     * End a chat session and trigger image generation
+     * @param {number} sessionId - Session ID
+     * @returns {Promise<Object>} { success, session_id, prompt_count, images_generated }
+     */
+    async endSession(sessionId) {
+        const response = await fetch(`${CONFIG.API_BASE_URL}/api/end-session`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                session_id: sessionId,
+            }),
+        });
+
+        if (!response.ok) {
+            const message = await response.text();
+            try {
+                const error = JSON.parse(message || '{}');
+                throw new Error(error.error || 'Failed to end session');
+            } catch (parseError) {
+                throw new Error(message || 'Failed to end session');
+            }
+        }
+
+        return await response.json();
+    },
+
+    /**
+     * Get images for a session
+     * @param {number} sessionId - Session ID
+     * @returns {Promise<Object>} { success, images: [...] }
+     */
+    async getImages(sessionId) {
+        const response = await fetch(`${CONFIG.API_BASE_URL}/api/images/${sessionId}`);
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch images');
         }
 
         return await response.json();
