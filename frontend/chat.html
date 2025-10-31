@@ -3,105 +3,192 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat - Unlearning to Rest</title>
+    <title>Chat - LLM Design Evaluator</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui']
+                    },
+                    colors: {
+                        brand: {
+                            dark: '#111827'
+                        }
+                    }
+                }
+            }
+        };
+    </script>
     <style>
-        /* Custom scrollbar for chat */
+        body {
+            font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
+            background-color: #f9fafb;
+            background-image:
+                radial-gradient(at 15% 15%, rgba(59, 130, 246, 0.12) 0, rgba(249, 250, 251, 0) 50%),
+                radial-gradient(at 85% 10%, rgba(236, 72, 153, 0.1) 0, rgba(249, 250, 251, 0) 55%),
+                radial-gradient(at 50% 95%, rgba(45, 212, 191, 0.12) 0, rgba(249, 250, 251, 0) 60%);
+            background-repeat: no-repeat;
+            background-size: 1200px 1200px, 1200px 1200px, 1200px 1200px;
+        }
         .chat-container::-webkit-scrollbar {
             width: 8px;
         }
         .chat-container::-webkit-scrollbar-track {
-            background: #f1f1f1;
+            background: #f4f4f5;
             border-radius: 4px;
         }
         .chat-container::-webkit-scrollbar-thumb {
-            background: #888;
+            background: #d4d4d8;
             border-radius: 4px;
         }
         .chat-container::-webkit-scrollbar-thumb:hover {
-            background: #555;
+            background: #a1a1aa;
         }
     </style>
 </head>
-<body class="bg-gray-50 h-screen flex flex-col">
-    <!-- Header -->
-    <div class="bg-white shadow-sm border-b">
-        <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-            <div>
-                <h1 class="text-lg font-semibold text-gray-800" id="modelName">Loading...</h1>
-                <p class="text-xs text-gray-500" id="userEmail"></p>
-            </div>
-            <div class="flex gap-2">
-                <button 
-                    id="newSessionBtn"
-                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition"
-                >
-                    New Session
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Chat Area -->
-    <div class="flex-1 overflow-hidden flex flex-col max-w-4xl mx-auto w-full">
-        <!-- Instructions (dismissible) -->
-        <div id="instructionsCard" class="bg-blue-50 border-b border-blue-200 p-4 m-4 rounded-lg">
-            <div class="flex justify-between items-start">
-                <div class="flex-1 text-sm text-blue-900" id="instructionsContent">
-                    <!-- Instructions will be inserted here -->
+<body class="antialiased bg-gray-50 text-gray-900 h-screen overflow-hidden">
+    <div class="h-full flex flex-col">
+    <header class="border-b border-gray-200 bg-transparent flex-shrink-0">
+            <div class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between py-4">
+                    <div>
+                        <h1 class="text-lg font-semibold text-gray-900" id="modelName">Loading...</h1>
+                        <p class="text-xs text-gray-500" id="userEmail"></p>
+                    </div>
+                    <button
+                        id="newSessionBtn"
+                        class="inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition-colors"
+                    >
+                        Start New Session
+                    </button>
                 </div>
-                <button 
-                    id="dismissInstructions"
-                    class="text-blue-600 hover:text-blue-800 ml-4 text-sm underline"
-                >
-                    Dismiss
-                </button>
             </div>
-        </div>
+        </header>
 
-        <!-- Messages Container -->
-        <div id="messagesContainer" class="flex-1 overflow-y-auto px-4 pb-4 chat-container">
-            <div id="messages" class="space-y-4">
-                <!-- Messages will be inserted here -->
-            </div>
-            
-            <!-- Typing Indicator -->
-            <div id="typingIndicator" class="hidden flex items-center gap-2 text-gray-500 text-sm mt-4">
-                <div class="flex gap-1">
-                    <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
-                    <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
-                    <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
+        <main class="flex-1 flex flex-col overflow-hidden min-h-0">
+            <div class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 lg:py-10 flex flex-col gap-6 flex-1 overflow-hidden min-h-0">
+                <section id="instructionsCard" class="flex-shrink-0 bg-white border border-gray-200 rounded-2xl shadow-sm p-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div class="text-sm text-gray-700 leading-relaxed" id="instructionsContent"></div>
+                    <button
+                        id="dismissInstructions"
+                        class="self-end sm:self-auto text-sm font-medium text-gray-600 hover:text-gray-900 whitespace-nowrap"
+                    >
+                        Dismiss
+                    </button>
+                </section>
+
+                <div class="flex-1 flex flex-col lg:flex-row gap-6 overflow-hidden min-h-0">
+                    <section class="flex-1 flex flex-col overflow-hidden min-h-0">
+                        <div class="flex-1 flex flex-col rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden min-h-0">
+                            <div id="messagesContainer" class="flex-1 overflow-y-auto px-4 sm:px-6 py-6 chat-container bg-gray-50 min-h-0">
+                                <div id="messages" class="space-y-6">
+                                    <!-- Messages injected here -->
+                                </div>
+
+                                <div id="typingIndicator" class="hidden flex items-center gap-2 text-sm text-gray-500 mt-4">
+                                    <span class="flex gap-1">
+                                        <span class="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style="animation-delay:0ms"></span>
+                                        <span class="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style="animation-delay:150ms"></span>
+                                        <span class="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style="animation-delay:300ms"></span>
+                                    </span>
+                                    <span>AI is thinking...</span>
+                                </div>
+                            </div>
+
+                            <div class="border-t border-gray-200 bg-white">
+                                <form id="messageForm" class="p-4 sm:p-5 flex flex-col gap-3 sm:flex-row sm:items-end">
+                                    <div class="relative flex-1">
+                                        <input
+                                            type="text"
+                                            id="messageInput"
+                                            placeholder="Describe what you want to explore..."
+                                            class="w-full rounded-xl border border-gray-300 px-4 py-3 pr-12 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-900"
+                                            required
+                                        >
+                                        <span class="absolute inset-y-0 right-4 flex items-center text-gray-400 pointer-events-none">↵</span>
+                                    </div>
+                                    <div class="flex gap-2 sm:w-auto">
+                                        <button
+                                            type="submit"
+                                            id="sendBtn"
+                                            class="px-5 py-3 rounded-xl bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                                        >
+                                            Send
+                                        </button>
+                                        <button
+                                            type="button"
+                                            id="resetBtn"
+                                            class="px-5 py-3 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:border-gray-300 hover:text-gray-900 transition-colors"
+                                        >
+                                            Reset Chat
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </section>
+
+                    <aside id="conceptPanel" class="w-full lg:w-80 xl:w-96 flex flex-col rounded-2xl border border-gray-200 bg-white shadow-sm flex-shrink-0 overflow-hidden">
+                        <div class="border-b border-gray-200 px-5 py-5">
+                            <div class="flex items-center justify-between mb-1">
+                                <h2 class="text-base font-semibold text-gray-900">Concepts</h2>
+                                <span class="text-xs font-medium text-gray-500" id="conceptCount">&nbsp;</span>
+                            </div>
+                            <p class="text-sm text-gray-600">Capture the ideas you want to keep from this exploration.</p>
+                        </div>
+                        <div class="flex-1 flex flex-col overflow-hidden min-h-0">
+                            <form id="conceptForm" class="border-b border-gray-200 p-5 space-y-4">
+                                <div class="space-y-2">
+                                    <label for="conceptTitle" class="text-sm font-medium text-gray-700">Title (optional)</label>
+                                    <input
+                                        type="text"
+                                        id="conceptTitle"
+                                        maxlength="150"
+                                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-900"
+                                        placeholder="Give this idea a working title"
+                                    >
+                                </div>
+                                <div class="space-y-2">
+                                    <label for="conceptContent" class="text-sm font-medium text-gray-700">Concept notes</label>
+                                    <textarea
+                                        id="conceptContent"
+                                        rows="6"
+                                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-gray-900"
+                                        placeholder="Summarise the concept in your own words"
+                                        required
+                                    ></textarea>
+                                </div>
+                                <div class="flex justify-end gap-2">
+                                    <button
+                                        type="button"
+                                        id="conceptCancelBtn"
+                                        class="hidden px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:border-gray-300 hover:text-gray-900 transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        id="conceptSaveBtn"
+                                        class="px-4 py-2.5 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                                    >
+                                        Save Concept
+                                    </button>
+                                </div>
+                                <p id="conceptStatus" class="text-xs text-gray-500"></p>
+                            </form>
+                            <div class="flex-1 overflow-y-auto p-5 space-y-4" id="conceptListContainer">
+                                <div id="conceptEmptyState" class="text-sm text-gray-400">No concepts saved yet.</div>
+                                <div id="conceptList" class="space-y-4"></div>
+                            </div>
+                        </div>
+                    </aside>
                 </div>
-                <span>AI is thinking...</span>
             </div>
-        </div>
-
-        <!-- Input Area -->
-        <div class="bg-white border-t p-4">
-            <form id="messageForm" class="flex gap-2">
-                <input 
-                    type="text" 
-                    id="messageInput" 
-                    placeholder="Type your message..."
-                    class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                    required
-                >
-                <button 
-                    type="submit" 
-                    id="sendBtn"
-                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    Send
-                </button>
-                <button 
-                    type="button" 
-                    id="resetBtn"
-                    class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-medium transition"
-                >
-                    Reset Chat
-                </button>
-            </form>
-        </div>
+        </main>
     </div>
 
     <!-- Load JavaScript modules -->
@@ -112,7 +199,7 @@
     
     <!-- Chat page logic -->
     <script>
-        // Check if user is logged in and has a session
+        // Ensure user session is present
         if (!Storage.isLoggedIn() || !Storage.getSessionId()) {
             window.location.href = 'index.html';
         }
@@ -131,61 +218,315 @@
         const instructionsContent = document.getElementById('instructionsContent');
         const dismissInstructions = document.getElementById('dismissInstructions');
 
-        // Display current model and user
+    const conceptForm = document.getElementById('conceptForm');
+        const conceptTitle = document.getElementById('conceptTitle');
+        const conceptContent = document.getElementById('conceptContent');
+        const conceptSaveBtn = document.getElementById('conceptSaveBtn');
+        const conceptCancelBtn = document.getElementById('conceptCancelBtn');
+        const conceptStatus = document.getElementById('conceptStatus');
+        const conceptList = document.getElementById('conceptList');
+        const conceptEmptyState = document.getElementById('conceptEmptyState');
+    const conceptCount = document.getElementById('conceptCount');
+
+        let concepts = [];
+        let editingConceptId = null;
+        let conceptStatusTimer = null;
+
         const currentModel = Storage.getCurrentModel();
         modelName.textContent = `Model: ${currentModel}`;
         userEmail.textContent = Storage.getUserEmail();
 
-        // Display instructions
         instructionsContent.innerHTML = CONFIG.STUDY_INSTRUCTIONS;
-
-        // Dismiss instructions
         dismissInstructions.addEventListener('click', () => {
             instructionsCard.classList.add('hidden');
         });
 
-        // Create message bubble
-        function createMessageBubble(role, content, timestamp) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
-            
-            const bubble = document.createElement('div');
-            bubble.className = `max-w-[70%] rounded-lg px-4 py-3 ${
-                role === 'user' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-white border border-gray-200 text-gray-800'
-            }`;
-            
-            const text = document.createElement('p');
-            text.className = 'text-sm whitespace-pre-wrap break-words';
-            text.textContent = content;
-            
-            bubble.appendChild(text);
-            
-            if (timestamp) {
-                const time = document.createElement('p');
-                time.className = `text-xs mt-1 ${role === 'user' ? 'text-blue-100' : 'text-gray-400'}`;
-                time.textContent = new Date(timestamp).toLocaleTimeString();
-                bubble.appendChild(time);
+        function setConceptStatus(message, type = 'info') {
+            if (conceptStatusTimer) {
+                clearTimeout(conceptStatusTimer);
+                conceptStatusTimer = null;
             }
-            
-            messageDiv.appendChild(bubble);
-            return messageDiv;
+
+            const baseClasses = ['text-xs', 'mt-1'];
+            let colourClass = 'text-gray-500';
+            if (type === 'success') {
+                colourClass = 'text-emerald-600';
+            } else if (type === 'error') {
+                colourClass = 'text-red-600';
+            }
+
+            conceptStatus.className = [...baseClasses, colourClass].join(' ');
+            conceptStatus.textContent = message || '';
+
+            if (message) {
+                conceptStatusTimer = setTimeout(() => {
+                    conceptStatus.textContent = '';
+                    conceptStatusTimer = null;
+                }, 4000);
+            }
         }
 
-        // Add message to UI
+        function resetConceptForm() {
+            editingConceptId = null;
+            conceptTitle.value = '';
+            conceptContent.value = '';
+            conceptSaveBtn.textContent = 'Save Concept';
+            conceptSaveBtn.disabled = false;
+            conceptCancelBtn.classList.add('hidden');
+            conceptCancelBtn.disabled = false;
+        }
+
+        function renderConcepts() {
+            conceptList.innerHTML = '';
+
+            if (!concepts.length) {
+                conceptEmptyState.classList.remove('hidden');
+                if (conceptCount) {
+                    conceptCount.textContent = '0';
+                }
+                return;
+            }
+
+            conceptEmptyState.classList.add('hidden');
+            if (conceptCount) {
+                conceptCount.textContent = concepts.length.toString();
+            }
+
+            concepts.forEach((concept, index) => {
+                const card = document.createElement('article');
+                card.className = 'border border-gray-200 rounded-xl p-4 bg-white hover:border-gray-300 transition-colors';
+
+                const header = document.createElement('div');
+                header.className = 'flex items-start justify-between gap-2';
+
+                const title = document.createElement('h4');
+                title.className = 'text-sm font-semibold text-gray-800';
+                title.textContent = concept.title || `Concept ${index + 1}`;
+
+                const actions = document.createElement('div');
+                actions.className = 'flex gap-2';
+
+                const editBtn = document.createElement('button');
+                editBtn.type = 'button';
+                editBtn.className = 'text-xs font-medium text-gray-500 hover:text-gray-900';
+                editBtn.textContent = 'Edit';
+                editBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    startEditingConcept(concept);
+                });
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.type = 'button';
+                deleteBtn.className = 'text-xs font-medium text-red-500 hover:text-red-600';
+                deleteBtn.textContent = 'Delete';
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    handleConceptDelete(concept.id);
+                });
+
+                actions.appendChild(editBtn);
+                actions.appendChild(deleteBtn);
+
+                header.appendChild(title);
+                header.appendChild(actions);
+
+                const content = document.createElement('p');
+                content.className = 'text-sm text-gray-700 whitespace-pre-wrap break-words mt-2';
+                content.textContent = concept.content;
+
+                const meta = document.createElement('p');
+                meta.className = 'text-xs text-gray-400 mt-2';
+                const createdAt = new Date(concept.created_at);
+                const updatedAt = new Date(concept.updated_at);
+                const isUpdated = updatedAt.getTime() !== createdAt.getTime();
+                meta.textContent = `${isUpdated ? 'Updated' : 'Saved'} ${updatedAt.toLocaleString()}`;
+
+                card.appendChild(header);
+                card.appendChild(content);
+                card.appendChild(meta);
+
+                if (concept.source_message_excerpt) {
+                    const source = document.createElement('p');
+                    source.className = 'text-xs text-gray-500 mt-2 italic';
+                    const roleLabel = concept.source_message_role === 'assistant' ? 'assistant' : 'you';
+                    source.textContent = `Referenced from ${roleLabel}: "${concept.source_message_excerpt}"`;
+                    card.appendChild(source);
+                }
+
+                conceptList.appendChild(card);
+            });
+        }
+
+        async function loadConcepts() {
+            try {
+                const sessionId = Storage.getSessionId();
+                if (!sessionId) {
+                    return;
+                }
+                const response = await API.getConcepts(sessionId);
+                concepts = response.concepts || [];
+                renderConcepts();
+            } catch (error) {
+                console.error('Error loading concepts:', error);
+                setConceptStatus('Could not load concepts. Please refresh to try again.', 'error');
+            }
+        }
+
+        function startEditingConcept(concept) {
+            editingConceptId = concept.id;
+            conceptTitle.value = concept.title || '';
+            conceptContent.value = concept.content;
+            conceptSaveBtn.textContent = 'Update Concept';
+            conceptCancelBtn.classList.remove('hidden');
+            conceptContent.focus();
+            setConceptStatus('Editing concept. Update the notes and press Update Concept to save.', 'info');
+        }
+
+        async function handleConceptDelete(conceptId) {
+            try {
+                await API.deleteConcept(conceptId);
+                if (editingConceptId === conceptId) {
+                    resetConceptForm();
+                }
+                await loadConcepts();
+                setConceptStatus('Concept deleted.', 'success');
+            } catch (error) {
+                console.error('Error deleting concept:', error);
+                setConceptStatus(error.message || 'Failed to delete concept.', 'error');
+            }
+        }
+
+        conceptForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const sessionId = Storage.getSessionId();
+            if (!sessionId) {
+                setConceptStatus('Session missing. Please refresh the page.', 'error');
+                return;
+            }
+
+            const title = conceptTitle.value.trim();
+            const content = conceptContent.value.trim();
+
+            if (!content) {
+                setConceptStatus('Please add some concept notes before saving.', 'error');
+                conceptContent.focus();
+                return;
+            }
+
+            const payload = {
+                content,
+                title: title || null,
+            };
+
+            const isEditing = Boolean(editingConceptId);
+            const originalLabel = conceptSaveBtn.textContent;
+
+            conceptSaveBtn.disabled = true;
+            conceptSaveBtn.textContent = isEditing ? 'Updating...' : 'Saving...';
+            conceptCancelBtn.disabled = true;
+
+            try {
+                if (isEditing) {
+                    await API.updateConcept(editingConceptId, payload);
+                    setConceptStatus('Concept updated.', 'success');
+                } else {
+                    await API.createConcept(sessionId, payload);
+                    setConceptStatus('Concept saved.', 'success');
+                }
+
+                resetConceptForm();
+                await loadConcepts();
+            } catch (error) {
+                console.error('Error saving concept:', error);
+                setConceptStatus(error.message || 'Failed to save concept.', 'error');
+            } finally {
+                conceptSaveBtn.disabled = false;
+                conceptSaveBtn.textContent = originalLabel;
+                conceptCancelBtn.disabled = false;
+            }
+        });
+
+        conceptCancelBtn.addEventListener('click', () => {
+            resetConceptForm();
+            setConceptStatus('Editing cancelled.', 'info');
+        });
+
+        function createMessageBubble(role, content, timestamp) {
+            const wrapper = document.createElement('div');
+            const timeLabel = timestamp
+                ? new Date(timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+                : '';
+
+            if (role === 'user') {
+                wrapper.className = 'flex justify-end';
+
+                const contentGroup = document.createElement('div');
+                contentGroup.className = 'flex flex-col items-end gap-2 max-w-[75%]';
+
+                const bubble = document.createElement('div');
+                bubble.className = 'rounded-2xl rounded-tr-sm bg-gray-900 text-white px-4 py-3 shadow-sm';
+
+                const text = document.createElement('p');
+                text.className = 'text-sm whitespace-pre-wrap break-words leading-relaxed';
+                text.textContent = content;
+
+                bubble.appendChild(text);
+                contentGroup.appendChild(bubble);
+
+                if (timeLabel) {
+                    const time = document.createElement('span');
+                    time.className = 'text-xs text-gray-400';
+                    time.textContent = timeLabel;
+                    contentGroup.appendChild(time);
+                }
+
+                wrapper.appendChild(contentGroup);
+                return wrapper;
+            }
+
+            wrapper.className = 'flex gap-3 items-start max-w-[80%]';
+
+            const avatar = document.createElement('div');
+            avatar.className = 'w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-xs font-semibold text-white shadow-sm';
+            avatar.textContent = 'AI';
+
+            const contentContainer = document.createElement('div');
+            contentContainer.className = 'flex-1';
+
+            const bubble = document.createElement('div');
+            bubble.className = 'rounded-2xl rounded-tl-sm border border-gray-200 bg-white px-4 py-3 shadow-sm';
+
+            const text = document.createElement('p');
+            text.className = 'text-sm text-gray-800 whitespace-pre-wrap break-words leading-relaxed';
+            text.textContent = content;
+
+            bubble.appendChild(text);
+            contentContainer.appendChild(bubble);
+
+            if (timeLabel) {
+                const time = document.createElement('span');
+                time.className = 'text-xs text-gray-400 mt-2 block';
+                time.textContent = timeLabel;
+                contentContainer.appendChild(time);
+            }
+
+            wrapper.appendChild(avatar);
+            wrapper.appendChild(contentContainer);
+
+            return wrapper;
+        }
+
         function addMessage(role, content, timestamp) {
             const messageBubble = createMessageBubble(role, content, timestamp);
             messages.appendChild(messageBubble);
             scrollToBottom();
         }
 
-        // Scroll to bottom of messages
         function scrollToBottom() {
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 
-        // Show/hide typing indicator
         function setTyping(isTyping) {
             if (isTyping) {
                 typingIndicator.classList.remove('hidden');
@@ -195,93 +536,77 @@
             }
         }
 
-        // Handle message submission
-        messageForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
+        messageForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
             const message = messageInput.value.trim();
-            if (!message) return;
-            
-            // Disable input
+            if (!message) {
+                return;
+            }
+
             messageInput.disabled = true;
             sendBtn.disabled = true;
-            
-            // Add user message to UI
+
             addMessage('user', message, new Date().toISOString());
-            
-            // Clear input
             messageInput.value = '';
-            
-            // Show typing indicator
             setTyping(true);
-            
+
             try {
-                // Send message to API
                 const sessionId = Storage.getSessionId();
                 const response = await API.sendMessage(sessionId, message);
-                
-                // Hide typing indicator
                 setTyping(false);
-                
-                // Add assistant response to UI
                 addMessage('assistant', response.response, response.timestamp);
-                
             } catch (error) {
                 console.error('Error sending message:', error);
                 setTyping(false);
-                
-                // Show error message
                 addMessage('assistant', `Error: ${error.message}. Please try again.`, new Date().toISOString());
             } finally {
-                // Re-enable input
                 messageInput.disabled = false;
                 sendBtn.disabled = false;
                 messageInput.focus();
             }
         });
 
-        // Handle reset chat
         resetBtn.addEventListener('click', async () => {
-            if (!confirm('Are you sure you want to reset the chat? This will clear the conversation history.')) {
-                return;
-            }
-            
             try {
                 const sessionId = Storage.getSessionId();
                 const response = await API.resetSession(sessionId);
-                
-                // Update session ID
-                Storage.saveSession(response.new_session_id, currentModel);
-                
-                // Clear messages
+
+                const updatedSessionId = response.session_id ?? sessionId;
+                Storage.saveSession(updatedSessionId, currentModel);
                 messages.innerHTML = '';
-                
-                // Show success message
-                const successMsg = createMessageBubble('assistant', 'Chat has been reset. Starting fresh!', new Date().toISOString());
-                messages.appendChild(successMsg);
-                
-                // Show instructions again
+                const clearedMessages = response.cleared_messages ?? 0;
+                const resetNotice = clearedMessages > 0
+                    ? `Cleared ${clearedMessages} message${clearedMessages === 1 ? '' : 's'} from this session. Your saved concepts remain available.`
+                    : 'Chat context cleared. Your saved concepts remain available in the Concepts panel.';
+                addMessage('assistant', resetNotice, new Date().toISOString());
+                if (response.ollama_cleared === false) {
+                    addMessage('assistant', 'Note: Could not confirm the model cleared its internal context. If responses seem off, use "Start New Session" from the header.', new Date().toISOString());
+                }
+
                 instructionsCard.classList.remove('hidden');
-                
+
+                resetConceptForm();
+                concepts = [];
+                renderConcepts();
+                await loadConcepts();
+                setConceptStatus('Chat reset. Existing concepts are still here; capture new ideas as you go.', 'info');
             } catch (error) {
                 console.error('Error resetting session:', error);
                 alert('Failed to reset chat. Please try again.');
             }
         });
 
-        // Handle new session
         newSessionBtn.addEventListener('click', () => {
-            if (confirm('Start a new session with a different model?')) {
-                Storage.clearSession();
-                window.location.href = 'select-model.html';
-            }
+            Storage.clearSession();
+            window.location.href = 'select-model.html';
         });
 
-        // Initialize: Show welcome message
-        addMessage('assistant', `Hello! I'm ready to help you with your design ideation. Feel free to ask me anything!`, new Date().toISOString());
-        
-        // Focus on input
+        addMessage('assistant', 'Hello! I\'m ready to help you with your design ideation. Feel free to ask me anything!', new Date().toISOString());
         messageInput.focus();
+
+        loadConcepts();
+        setConceptStatus('Use the Concepts panel to capture the ideas you want to keep.', 'info');
     </script>
 </body>
 </html>

@@ -8,7 +8,7 @@ This application allows undergraduate design students to participate in an ideat
 
 - Simple email-based session tracking (no passwords)
 - Model selection interface
-- Chat interface with reset functionality
+- Chat interface with reset functionality and concept capture panel
 - Automatic logging of all interactions
 - Admin panel for data export
 

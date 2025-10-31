@@ -1,11 +1,51 @@
 """
 Chat routes - handles session creation, chat messages, and reset functionality.
 """
+import json
+import logging
+from datetime import datetime
+from urllib.parse import urljoin
+from urllib import request as urllib_request, error as urllib_error
+
 from flask import Blueprint, request, jsonify
+
 from backend.database import get_db_session
 from backend.models import Session, Message
 from backend import config
 import ollama
+
+
+logger = logging.getLogger(__name__)
+
+
+def clear_ollama_context(model_name: str) -> bool:
+    """Attempt to clear the active conversation context for a model on the Ollama server."""
+    host = (config.OLLAMA_HOST or '').rstrip('/')
+    if not host:
+        return False
+
+    attempts = [
+        ('/api/chat/clear', {'model': model_name}),
+        ('/api/chat', {'model': model_name, 'messages': [], 'clear': True, 'stream': False}),
+    ]
+
+    for path, payload in attempts:
+        url = urljoin(f'{host}/', path.lstrip('/'))
+        request_body = json.dumps(payload).encode('utf-8')
+        req = urllib_request.Request(url, data=request_body, headers={'Content-Type': 'application/json'})
+
+        try:
+            with urllib_request.urlopen(req, timeout=5) as response:
+                if 200 <= getattr(response, 'status', 200) < 400:
+                    return True
+        except urllib_error.HTTPError as exc:
+            if exc.code in (404, 405):
+                continue
+            logger.warning('Ollama clear request failed (%s): %s', path, exc)
+        except Exception as exc:  # pylint: disable=broad-except
+            logger.warning('Ollama clear request error (%s): %s', path, exc)
+
+    return False
 
 chat_bp = Blueprint('chat', __name__)
 
@@ -101,7 +141,9 @@ def send_message():
             session = db.query(Session).filter(Session.id == session_id).first()
             if not session:
                 return jsonify({'error': 'Session not found'}), 404
-            
+
+            context_cutoff = session.context_reset_at or session.created_at
+
             # Save user message
             user_msg = Message(
                 session_id=session_id,
@@ -110,16 +152,19 @@ def send_message():
             )
             db.add(user_msg)
             db.commit()
-            
-            # Get conversation history for context
-            messages = db.query(Message).filter(Message.session_id == session_id).order_by(Message.timestamp).all()
-            
+
+            # Get conversation history for context (only messages since last reset)
+            messages = db.query(Message).filter(
+                Message.session_id == session_id,
+                Message.timestamp >= context_cutoff
+            ).order_by(Message.timestamp).all()
+
             # Format messages for Ollama
             ollama_messages = [
                 {'role': msg.role, 'content': msg.content}
                 for msg in messages
             ]
-            
+
             # Get response from Ollama
             try:
                 response = ollama.chat(
@@ -156,20 +201,20 @@ def send_message():
 
 @chat_bp.route('/api/reset', methods=['POST'])
 def reset_session():
-    """
-    Reset a chat session (clears conversation context).
-    Creates a new session with the same model.
-    
+    """Reset a chat session by clearing the active context in place.
+
     Request body:
         {
             "session_id": 123
         }
-    
+
     Response:
         {
             "success": true,
-            "new_session_id": 124,
-            "message": "Session reset successfully"
+            "session_id": 123,
+            "message": "Session reset successfully",
+            "cleared_messages": 9,
+            "ollama_cleared": true
         }
     """
     try:
@@ -183,24 +228,29 @@ def reset_session():
         db = get_db_session()
         
         try:
-            # Get old session
-            old_session = db.query(Session).filter(Session.id == session_id).first()
-            if not old_session:
+            # Get existing session
+            session = db.query(Session).filter(Session.id == session_id).first()
+            if not session:
                 return jsonify({'error': 'Session not found'}), 404
-            
-            # Create new session with same user and model
-            new_session = Session(
-                user_id=old_session.user_id,
-                model_name=old_session.model_name
-            )
-            db.add(new_session)
+
+            context_cutoff = session.context_reset_at or session.created_at
+            active_messages = db.query(Message).filter(
+                Message.session_id == session_id,
+                Message.timestamp >= context_cutoff
+            ).count()
+
+            session.context_reset_at = datetime.utcnow()
+            db.add(session)
             db.commit()
-            db.refresh(new_session)
-            
+
+            cleared = clear_ollama_context(session.model_name)
+
             return jsonify({
                 'success': True,
-                'new_session_id': new_session.id,
-                'message': 'Session reset successfully'
+                'session_id': session.id,
+                'message': 'Session reset successfully',
+                'cleared_messages': active_messages,
+                'ollama_cleared': cleared
             }), 200
             
         finally:

@@ -108,9 +108,9 @@ const API = {
     },
 
     /**
-     * Reset the current session (creates new session with same model)
+     * Reset the current session by clearing model context in place.
      * @param {number} sessionId - Current session ID
-     * @returns {Promise<Object>} { success, new_session_id, message }
+     * @returns {Promise<Object>} { success, session_id, cleared_messages, ollama_cleared }
      */
     async resetSession(sessionId) {
         const response = await fetch(CONFIG.API_ENDPOINTS.reset, {
@@ -130,6 +130,100 @@ const API = {
                 throw new Error(error.error || 'Failed to reset session');
             } catch (parseError) {
                 throw new Error(message || 'Failed to reset session');
+            }
+        }
+
+        return await response.json();
+    },
+
+    /**
+     * Get concepts saved for a session
+     * @param {number} sessionId - Session ID
+     * @returns {Promise<Object>} { concepts: [...] }
+     */
+    async getConcepts(sessionId) {
+        const response = await fetch(CONFIG.API_ENDPOINTS.sessionConcepts(sessionId));
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch concepts');
+        }
+
+        return await response.json();
+    },
+
+    /**
+     * Create a new concept for a session
+     * @param {number} sessionId - Session ID
+     * @param {Object} payload - { title, content, source_message_id }
+     * @returns {Promise<Object>} Concept data
+     */
+    async createConcept(sessionId, payload) {
+        const response = await fetch(CONFIG.API_ENDPOINTS.sessionConcepts(sessionId), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+            const message = await response.text();
+            try {
+                const error = JSON.parse(message || '{}');
+                throw new Error(error.error || 'Failed to save concept');
+            } catch (parseError) {
+                throw new Error(message || 'Failed to save concept');
+            }
+        }
+
+        return await response.json();
+    },
+
+    /**
+     * Update an existing concept
+     * @param {number} conceptId - Concept ID
+     * @param {Object} payload - Updated concept data
+     * @returns {Promise<Object>} Updated concept
+     */
+    async updateConcept(conceptId, payload) {
+        const response = await fetch(`${CONFIG.API_ENDPOINTS.concepts}/${conceptId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+            const message = await response.text();
+            try {
+                const error = JSON.parse(message || '{}');
+                throw new Error(error.error || 'Failed to update concept');
+            } catch (parseError) {
+                throw new Error(message || 'Failed to update concept');
+            }
+        }
+
+        return await response.json();
+    },
+
+    /**
+     * Delete a concept
+     * @param {number} conceptId - Concept ID
+     * @returns {Promise<Object>} { success: true }
+     */
+    async deleteConcept(conceptId) {
+        const response = await fetch(`${CONFIG.API_ENDPOINTS.concepts}/${conceptId}`, {
+            method: 'DELETE',
+        });
+
+        if (!response.ok) {
+            const message = await response.text();
+            try {
+                const error = JSON.parse(message || '{}');
+                throw new Error(error.error || 'Failed to delete concept');
+            } catch (parseError) {
+                throw new Error(message || 'Failed to delete concept');
             }
         }
 
