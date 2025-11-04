@@ -5,3 +5,4 @@ ollama==0.3.3
 gunicorn==21.2.0
 replicate==0.25.1
 requests==2.31.0
+python-dotenv==1.0.0

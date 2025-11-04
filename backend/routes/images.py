@@ -7,7 +7,7 @@ from flask import Blueprint, jsonify, request, send_file
 import replicate
 from backend.database import get_db_session
 from backend.models import GeneratedImage, Prompt, Session
-from backend.config import REPLICATE_API_TOKEN, IMAGES_DIR
+from backend.config import REPLICATE_API_TOKEN, IMAGES_DIR, IMAGE_STYLE_PREFIX
 
 logger = logging.getLogger(__name__)
 images_bp = Blueprint('images', __name__)
@@ -43,12 +43,16 @@ def generate_image_from_prompt(prompt_text, session_id, prompt_id):
         
         logger.info(f"Generating image for prompt {prompt_id} in session {session_id}")
         
+        # Prepend style prefix to ensure consistent styling across all images
+        full_prompt = f"{IMAGE_STYLE_PREFIX}{prompt_text}"
+        logger.info(f"Full prompt with style prefix: {full_prompt}")
+        
         # Generate image using Flux Schnell
         # Model: black-forest-labs/flux-schnell
         output = replicate.run(
             "black-forest-labs/flux-schnell",
             input={
-                "prompt": prompt_text,
+                "prompt": full_prompt,
                 "num_outputs": 1,
                 "aspect_ratio": "1:1",
                 "output_format": "png",
