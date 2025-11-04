@@ -7,6 +7,7 @@ A web application for conducting user studies with LLM models (Llama 3.2:3b and 
 This application allows undergraduate design students to participate in an ideation activity using two different language models. The app features:
 
 - Simple email-based session tracking (no passwords)
+- **Moodboard creation** for collecting reference images before starting
 - Model selection interface
 - Chat interface with reset functionality and concept capture panel
 - Automatic logging of all interactions
@@ -141,16 +142,23 @@ utr-user-study-web-app/
 │       ├── auth.py
 │       ├── models.py
 │       ├── chat.py
+│       ├── prompts.py
+│       ├── images.py
+│       ├── moodboard.py    # Moodboard image uploads
 │       └── admin.py
 ├── frontend/
 │   ├── index.html          # Login page
+│   ├── moodboard.html      # Moodboard creation page
 │   ├── select-model.html   # Model selection
 │   ├── chat.html           # Chat interface
+│   ├── gallery.html        # Generated images
 │   └── js/
 │       ├── config.js       # Configuration
 │       ├── api.js          # API client
 │       └── storage.js      # LocalStorage utils
 ├── data/                   # SQLite database (gitignored)
+│   ├── images/             # Generated images
+│   └── moodboard/          # User-uploaded reference images
 ├── logs/                   # Application logs (gitignored)
 ├── .env                    # Environment variables (gitignored)
 ├── .env.example            # Environment template
@@ -179,6 +187,13 @@ See `.env.example` for a full template.
 
 ### Authentication
 - `POST /api/login` - Login with email (creates user if new)
+
+### Moodboard
+- `POST /api/moodboard/upload` - Upload reference image
+- `GET /api/moodboard/<user_id>` - Get user's moodboard images
+- `GET /api/moodboard/image/<image_id>` - Serve moodboard image file
+- `DELETE /api/moodboard/image/<image_id>` - Delete specific image
+- `DELETE /api/moodboard/clear/<user_id>` - Clear all user's moodboard images
 
 ### Models
 - `GET /api/models` - List available models

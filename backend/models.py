@@ -146,3 +146,27 @@ class GeneratedImage(Base):
             'prompt_content': self.prompt.content if self.prompt else None
         }
 
+
+class MoodboardImage(Base):
+    """MoodboardImage model - stores reference images uploaded by users before starting activities."""
+    __tablename__ = 'moodboard_images'
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    image_path = Column(String(500), nullable=False)
+    original_filename = Column(String(255), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    # Relationships
+    user = relationship('User', backref='moodboard_images')
+
+    def to_dict(self):
+        """Convert moodboard image to dictionary."""
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'image_path': self.image_path,
+            'original_filename': self.original_filename,
+            'created_at': self.created_at.isoformat()
+        }
+

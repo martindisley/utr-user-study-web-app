@@ -289,6 +289,96 @@ const API = {
 
         return await response.json();
     },
+
+    /**
+     * Upload a moodboard image
+     * @param {number} userId - User ID
+     * @param {File} file - Image file to upload
+     * @returns {Promise<Object>} { success, image }
+     */
+    async uploadMoodboardImage(userId, file) {
+        const formData = new FormData();
+        formData.append('user_id', userId);
+        formData.append('file', file);
+
+        const response = await fetch(`${CONFIG.API_BASE_URL}/api/moodboard/upload`, {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!response.ok) {
+            const message = await response.text();
+            try {
+                const error = JSON.parse(message || '{}');
+                throw new Error(error.error || 'Failed to upload image');
+            } catch (parseError) {
+                throw new Error(message || 'Failed to upload image');
+            }
+        }
+
+        return await response.json();
+    },
+
+    /**
+     * Get all moodboard images for a user
+     * @param {number} userId - User ID
+     * @returns {Promise<Object>} { success, images: [...] }
+     */
+    async getMoodboard(userId) {
+        const response = await fetch(`${CONFIG.API_BASE_URL}/api/moodboard/${userId}`);
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch moodboard images');
+        }
+
+        return await response.json();
+    },
+
+    /**
+     * Delete a moodboard image
+     * @param {number} imageId - Image ID
+     * @returns {Promise<Object>} { success, message }
+     */
+    async deleteMoodboardImage(imageId) {
+        const response = await fetch(`${CONFIG.API_BASE_URL}/api/moodboard/image/${imageId}`, {
+            method: 'DELETE',
+        });
+
+        if (!response.ok) {
+            const message = await response.text();
+            try {
+                const error = JSON.parse(message || '{}');
+                throw new Error(error.error || 'Failed to delete image');
+            } catch (parseError) {
+                throw new Error(message || 'Failed to delete image');
+            }
+        }
+
+        return await response.json();
+    },
+
+    /**
+     * Clear all moodboard images for a user
+     * @param {number} userId - User ID
+     * @returns {Promise<Object>} { success, message, deleted_count }
+     */
+    async clearMoodboard(userId) {
+        const response = await fetch(`${CONFIG.API_BASE_URL}/api/moodboard/clear/${userId}`, {
+            method: 'DELETE',
+        });
+
+        if (!response.ok) {
+            const message = await response.text();
+            try {
+                const error = JSON.parse(message || '{}');
+                throw new Error(error.error || 'Failed to clear moodboard');
+            } catch (parseError) {
+                throw new Error(message || 'Failed to clear moodboard');
+            }
+        }
+
+        return await response.json();
+    },
 };
 
 // Export API object
