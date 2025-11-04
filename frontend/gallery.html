@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Gallery - LLM Prompt Study</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui']
+                    },
+                    colors: {
+                        brand: {
+                            dark: '#111827'
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        html, body {
+            min-height: 100vh;
+            height: 100%;
+        }
+        
+        body {
+            font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
+            background-color: #f9fafb !important;
+            background-image:
+                radial-gradient(at 15% 15%, rgba(59, 130, 246, 0.12) 0, rgba(249, 250, 251, 0) 50%),
+                radial-gradient(at 85% 10%, rgba(236, 72, 153, 0.1) 0, rgba(249, 250, 251, 0) 55%),
+                radial-gradient(at 50% 95%, rgba(45, 212, 191, 0.12) 0, rgba(249, 250, 251, 0) 60%);
+            background-repeat: no-repeat;
+            background-size: 100% 100%;
+            background-attachment: fixed;
+        }
+        .image-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .image-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .loading-spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="antialiased text-gray-900 min-h-screen">
+    <!-- Header -->
+    <header class="border-b border-gray-200 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between py-4">
+                <div>
+                    <h1 class="text-lg font-semibold text-gray-900">Generated Images</h1>
+                    <p class="text-xs text-gray-500" id="sessionInfo">Session images</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span id="imageCount" class="text-sm text-gray-600"></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 lg:py-10">
+        <!-- Loading State -->
+        <div id="loadingState" class="flex flex-col items-center justify-center py-20">
+            <div class="loading-spinner mb-4"></div>
+            <p class="text-gray-600 text-lg font-medium">Generating your images...</p>
+            <p class="text-gray-500 text-sm mt-2">This may take a few moments</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="hidden">
+            <div class="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
+                <svg class="w-12 h-12 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <h2 class="text-xl font-semibold text-gray-900 mb-2">Unable to Load Images</h2>
+                <p class="text-gray-600 mb-4" id="errorMessage">Something went wrong loading the images.</p>
+                <button onclick="location.reload()" class="inline-flex items-center px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition-colors">
+                    Try Again
+                </button>
+            </div>
+        </div>
+
+        <!-- Image Grid -->
+        <div id="imageGrid" class="hidden">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">Your Generated Images</h2>
+                <p class="text-gray-600">Review the images generated from your prompts below.</p>
+            </div>
+
+            <div id="imagesContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                <!-- Image cards will be inserted here -->
+            </div>
+
+            <!-- Continue Button -->
+            <div class="flex justify-center pt-6 border-t border-gray-200">
+                <button
+                    id="continueBtn"
+                    class="inline-flex items-center justify-center px-8 py-3 rounded-lg bg-gray-900 text-white text-base font-medium hover:bg-gray-800 transition-colors shadow-lg"
+                >
+                    Continue to Next Model
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        let sessionId = null;
+        let images = [];
+
+        // Initialize page
+        async function init() {
+            try {
+                // Get session ID from URL or storage
+                const urlParams = new URLSearchParams(window.location.search);
+                sessionId = urlParams.get('session') || Storage.getItem('currentSessionId');
+
+                if (!sessionId) {
+                    showError('No session found. Please start a new session.');
+                    return;
+                }
+
+                // Load images
+                await loadImages();
+            } catch (error) {
+                console.error('Initialization error:', error);
+                showError(error.message || 'Failed to initialize gallery');
+            }
+        }
+
+        // Load images for the session
+        async function loadImages() {
+            try {
+                const response = await API.getImages(sessionId);
+                
+                if (!response.success) {
+                    throw new Error(response.error || 'Failed to load images');
+                }
+
+                images = response.images;
+
+                if (images.length === 0) {
+                    showError('No images were generated for this session.');
+                    return;
+                }
+
+                // Display images
+                displayImages();
+            } catch (error) {
+                console.error('Error loading images:', error);
+                showError(error.message || 'Failed to load images');
+            }
+        }
+
+        // Display images in the grid
+        function displayImages() {
+            const container = document.getElementById('imagesContainer');
+            const imageCount = document.getElementById('imageCount');
+            
+            container.innerHTML = '';
+            imageCount.textContent = `${images.length} image${images.length !== 1 ? 's' : ''}`;
+
+            images.forEach((image, index) => {
+                const card = createImageCard(image, index + 1);
+                container.appendChild(card);
+            });
+
+            // Show the grid, hide loading
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('imageGrid').classList.remove('hidden');
+        }
+
+        // Create an image card element
+        function createImageCard(image, index) {
+            const card = document.createElement('div');
+            card.className = 'image-card bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm';
+
+            const imageUrl = `${API.baseURL}/api/image-file/${image.id}`;
+            const promptPreview = image.prompt_content 
+                ? (image.prompt_content.length > 100 
+                    ? image.prompt_content.substring(0, 100) + '...' 
+                    : image.prompt_content)
+                : 'No prompt available';
+
+            card.innerHTML = `
+                <div class="aspect-square bg-gray-100 relative overflow-hidden">
+                    <img 
+                        src="${imageUrl}" 
+                        alt="Generated image ${index}"
+                        class="w-full h-full object-cover"
+                        loading="lazy"
+                        onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 400%22%3E%3Crect fill=%22%23f3f4f6%22 width=%22400%22 height=%22400%22/%3E%3Ctext fill=%22%239ca3af%22 font-family=%22sans-serif%22 font-size=%2220%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3EImage unavailable%3C/text%3E%3C/svg%3E'"
+                    >
+                </div>
+                <div class="p-4">
+                    <div class="flex items-start justify-between mb-2">
+                        <span class="text-xs font-medium text-gray-500">Prompt ${index}</span>
+                    </div>
+                    <p class="text-sm text-gray-700 line-clamp-3">${promptPreview}</p>
+                </div>
+            `;
+
+            return card;
+        }
+
+        // Show error state
+        function showError(message) {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('imageGrid').classList.add('hidden');
+            document.getElementById('errorState').classList.remove('hidden');
+            document.getElementById('errorMessage').textContent = message;
+        }
+
+        // Continue to next model
+        document.getElementById('continueBtn')?.addEventListener('click', () => {
+            // Clear current session
+            Storage.clearSession();
+            
+            // Navigate to model selection
+            window.location.href = 'select-model.html';
+        });
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

@@ -10,7 +10,7 @@ from urllib import request as urllib_request, error as urllib_error
 from flask import Blueprint, request, jsonify
 
 from backend.database import get_db_session
-from backend.models import Session, Message
+from backend.models import Session, Message, Prompt
 from backend import config
 import ollama
 
@@ -258,3 +258,107 @@ def reset_session():
             
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@chat_bp.route('/api/end-session', methods=['POST'])
+def end_session():
+    """
+    End a chat session and trigger image generation for all prompts.
+    
+    Request body:
+        {
+            "session_id": 123
+        }
+    
+    Response:
+        {
+            "success": true,
+            "session_id": 123,
+            "message": "Session ended, generating images...",
+            "prompt_count": 5,
+            "images_generated": 5
+        }
+    """
+    try:
+        data = request.get_json()
+        
+        if not data or 'session_id' not in data:
+            return jsonify({'error': 'session_id is required'}), 400
+        
+        session_id = data['session_id']
+        
+        db = get_db_session()
+        
+        try:
+            # Get session
+            session = db.query(Session).filter(Session.id == session_id).first()
+            if not session:
+                return jsonify({'error': 'Session not found'}), 404
+            
+            # Get all prompts for this session
+            prompts = db.query(Prompt).filter(Prompt.session_id == session_id).all()
+            prompt_count = len(prompts)
+            
+            if prompt_count == 0:
+                return jsonify({
+                    'success': False,
+                    'session_id': session_id,
+                    'message': 'No prompts to generate images for',
+                    'prompt_count': 0,
+                    'images_generated': 0
+                }), 400
+            
+            # Import here to avoid circular dependency
+            from backend.routes.images import generate_image_from_prompt
+            from backend.models import GeneratedImage
+            from backend.config import IMAGES_DIR
+            import os
+            
+            # Ensure images directory exists
+            session_dir = os.path.join(IMAGES_DIR, f'session_{session_id}')
+            os.makedirs(session_dir, exist_ok=True)
+            
+            images_generated = 0
+            
+            # Generate images for each prompt
+            for prompt in prompts:
+                # Check if image already exists
+                existing_image = db.query(GeneratedImage).filter(
+                    GeneratedImage.session_id == session_id,
+                    GeneratedImage.prompt_id == prompt.id
+                ).first()
+                
+                if existing_image:
+                    images_generated += 1
+                    continue
+                
+                # Generate new image
+                image_path = generate_image_from_prompt(prompt.content, session_id, prompt.id)
+                
+                if image_path:
+                    # Save to database
+                    generated_image = GeneratedImage(
+                        session_id=session_id,
+                        prompt_id=prompt.id,
+                        image_path=image_path
+                    )
+                    db.add(generated_image)
+                    images_generated += 1
+            
+            db.commit()
+            
+            return jsonify({
+                'success': True,
+                'session_id': session_id,
+                'message': 'Session ended successfully, images generated',
+                'prompt_count': prompt_count,
+                'images_generated': images_generated
+            }), 200
+            
+        finally:
+            db.close()
+            
+    except Exception as e:
+        logger.error(f"Error ending session: {str(e)}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+

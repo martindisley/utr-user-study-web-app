@@ -42,13 +42,29 @@ source venv/bin/activate
 pip install -r backend/requirements.txt
 ```
 
-### 2. Start Ollama
+### 2. Configure Environment Variables
+
+Create a `.env` file in the project root:
+
+```bash
+cp .env.example .env
+```
+
+Then edit `.env` and add your Replicate API token:
+
+```bash
+REPLICATE_API_TOKEN=your_actual_token_here
+```
+
+Get your Replicate API token from: https://replicate.com/account/api-tokens
+
+### 3. Start Ollama
 
 ```bash
 ollama serve > logs/ollama.log 2>&1 &
 ```
 
-### 3. Start the Backend Server
+### 4. Start the Backend Server
 
 **Development Mode:**
 ```bash
@@ -65,19 +81,16 @@ This starts both Ollama and Flask with Gunicorn (8 workers) for concurrent users
 Or manually with Gunicorn:
 ```bash
 source venv/bin/activate
-export OLLAMA_HOST=http://localhost:11434
-export CORS_ORIGINS=https://<your-netlify-site>.netlify.app
-export PORT=5000
-
+# Environment variables are loaded from .env file automatically
 cd backend
-gunicorn -w 4 -b 0.0.0.0:${PORT} \
+gunicorn -w 4 -b 0.0.0.0:5000 \
   --timeout 120 \
   --access-logfile ../logs/access.log \
   --error-logfile ../logs/error.log \
   backend.app:create_app()
 ```
 
-### 4. Enable Public Access with Tailscale Funnel
+### 5. Enable Public Access with Tailscale Funnel
 
 ```bash
 sudo tailscale serve reset
@@ -139,10 +152,27 @@ utr-user-study-web-app/
 │       └── storage.js      # LocalStorage utils
 ├── data/                   # SQLite database (gitignored)
 ├── logs/                   # Application logs (gitignored)
+├── .env                    # Environment variables (gitignored)
+├── .env.example            # Environment template
 ├── setup.sh                # Install dependencies
 ├── run.sh                  # Start dev server
 ├── start_optimized.sh      # Start production server
 └── .gitignore
+```
+
+## Configuration
+
+The app uses environment variables for configuration. These are loaded from a `.env` file:
+
+```bash
+REPLICATE_API_TOKEN=your_token_here  # Required for image generation
+OLLAMA_HOST=http://localhost:11434   # Ollama server location
+DEBUG=false                          # Debug mode
+PORT=5000                           # Server port
+CORS_ORIGINS=*                       # Allowed CORS origins
+```
+
+See `.env.example` for a full template.
 ```
 
 ## API Documentation

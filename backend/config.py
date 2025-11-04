@@ -2,6 +2,10 @@
 Configuration settings for the Unlearning to Rest User Study application.
 """
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Base directory
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -14,6 +18,15 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 # Ollama configuration
 OLLAMA_HOST = os.environ.get('OLLAMA_HOST', 'http://localhost:11434')
+
+# Replicate configuration
+REPLICATE_API_TOKEN = os.environ.get('REPLICATE_API_TOKEN', '')
+
+# Image generation style prefix (prepended to all prompts for consistency)
+IMAGE_STYLE_PREFIX = 'A professional product design photograph, clean white background, high-end furniture catalog'
+
+# Image storage
+IMAGES_DIR = os.path.join(PROJECT_ROOT, 'data', 'images')
 
 # Available models for the study
 AVAILABLE_MODELS = [

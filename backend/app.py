@@ -16,8 +16,9 @@ from backend.database import init_db
 from backend.routes.auth import auth_bp
 from backend.routes.models import models_bp
 from backend.routes.chat import chat_bp
-from backend.routes.concepts import concepts_bp
+from backend.routes.prompts import prompts_bp
 from backend.routes.admin import admin_bp
+from backend.routes.images import images_bp
 import logging
 
 
@@ -59,8 +60,9 @@ def create_app():
     app.register_blueprint(auth_bp)
     app.register_blueprint(models_bp)
     app.register_blueprint(chat_bp)
-    app.register_blueprint(concepts_bp)
+    app.register_blueprint(prompts_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(images_bp)
     
     # Serve frontend files
     @app.route('/')
