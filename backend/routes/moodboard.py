@@ -77,7 +77,11 @@ def upload_moodboard_image():
         
         # Generate unique filename
         original_filename = secure_filename(file.filename)
-        file_ext = original_filename.rsplit('.', 1)[1].lower()
+        # Defensive: fallback to original file extension if secure_filename strips it
+        if '.' in original_filename:
+            file_ext = original_filename.rsplit('.', 1)[1].lower()
+        else:
+            file_ext = file.filename.rsplit('.', 1)[1].lower()
         unique_filename = f"{uuid.uuid4().hex}.{file_ext}"
         file_path = os.path.join(user_dir, unique_filename)
         
