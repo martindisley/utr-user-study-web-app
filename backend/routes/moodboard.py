@@ -4,6 +4,7 @@ Moodboard image routes for uploading and managing reference images.
 import os
 import logging
 import uuid
+import mimetypes
 from flask import Blueprint, jsonify, request, send_file
 from werkzeug.utils import secure_filename
 from backend.database import get_db_session
@@ -156,7 +157,12 @@ def serve_moodboard_image(image_id):
         if not os.path.exists(absolute_path):
             return jsonify({'error': 'Image file not found'}), 404
         
-        return send_file(absolute_path, mimetype='image/png')
+        # Determine mimetype from file extension
+        mimetype, _ = mimetypes.guess_type(absolute_path)
+        if mimetype is None:
+            mimetype = 'application/octet-stream'
+        
+        return send_file(absolute_path, mimetype=mimetype)
         
     except Exception as e:
         logger.error(f"Error serving moodboard image: {str(e)}", exc_info=True)
