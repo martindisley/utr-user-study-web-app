@@ -36,13 +36,31 @@
             background-attachment: fixed;
         }
 
-        .drop-zone {
+        .gallery-drop-zone {
             transition: all 0.3s ease;
+            min-height: 400px;
         }
 
-        .drop-zone.drag-over {
-            border-color: #4f46e5;
+        .gallery-drop-zone.drag-over {
             background-color: rgba(79, 70, 229, 0.05);
+            border-color: #4f46e5;
+        }
+
+        .gallery-drop-zone.drag-over::after {
+            content: 'Drop images here';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #4f46e5;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .empty-state {
+            min-height: 400px;
         }
 
         .image-card {
@@ -84,23 +102,22 @@
                 </div>
             </header>
 
-            <!-- Upload Area -->
-            <section class="bg-white border border-gray-200 rounded-2xl shadow-sm p-8 mb-8">
-                <div 
-                    id="dropZone"
-                    class="drop-zone border-2 border-dashed border-gray-300 rounded-xl p-12 text-center cursor-pointer hover:border-gray-400"
-                >
-                    <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <!-- Moodboard Gallery -->
+            <section class="bg-white border-2 border-dashed border-gray-300 rounded-2xl shadow-sm p-8 relative gallery-drop-zone" id="galleryDropZone">
+                <input type="file" id="fileInput" class="hidden" accept="image/png,image/jpeg,image/jpg,image/gif,image/webp" multiple>
+                
+                <!-- Empty State -->
+                <div id="emptyState" class="empty-state flex flex-col items-center justify-center text-center">
+                    <svg class="w-20 h-20 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                     </svg>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Drop images here</h3>
-                    <p class="text-sm text-gray-600 mb-4">or click to browse your files</p>
+                    <h3 class="text-2xl font-semibold text-gray-900 mb-2">Drop images here</h3>
+                    <p class="text-sm text-gray-600 mb-4">or click anywhere to browse your files</p>
                     <p class="text-xs text-gray-500">Supports: PNG, JPG, JPEG, GIF, WebP (Max 10MB each)</p>
-                    <input type="file" id="fileInput" class="hidden" accept="image/png,image/jpeg,image/jpg,image/gif,image/webp" multiple>
                 </div>
 
                 <!-- Upload Progress -->
-                <div id="uploadProgress" class="hidden mt-4">
+                <div id="uploadProgress" class="hidden mb-6">
                     <div class="bg-gray-100 rounded-lg p-4">
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-sm font-medium text-gray-700">Uploading...</span>
@@ -111,12 +128,9 @@
                         </div>
                     </div>
                 </div>
-            </section>
 
-            <!-- Image Grid -->
-            <section id="imageGridSection" class="hidden">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-2xl font-bold text-gray-900">
+                <div id="imageGridHeader" class="hidden flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold text-gray-900">
                         Your Collection <span id="imageCount" class="text-gray-500 font-normal text-lg"></span>
                     </h2>
                     <button
@@ -127,7 +141,8 @@
                     </button>
                 </div>
                 
-                <div id="imageGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-8">
+                <!-- Image Grid -->
+                <div id="imageGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                     <!-- Image cards will be inserted here -->
                 </div>
             </section>
@@ -156,10 +171,11 @@
             window.location.href = 'index.html';
         }
 
-        const dropZone = document.getElementById('dropZone');
+        const galleryDropZone = document.getElementById('galleryDropZone');
         const fileInput = document.getElementById('fileInput');
         const imageGrid = document.getElementById('imageGrid');
-        const imageGridSection = document.getElementById('imageGridSection');
+        const imageGridHeader = document.getElementById('imageGridHeader');
+        const emptyState = document.getElementById('emptyState');
         const imageCount = document.getElementById('imageCount');
         const uploadProgress = document.getElementById('uploadProgress');
         const progressBar = document.getElementById('progressBar');
@@ -201,11 +217,13 @@
             imageGrid.innerHTML = '';
             
             if (images.length === 0) {
-                imageGridSection.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                imageGridHeader.classList.add('hidden');
                 return;
             }
 
-            imageGridSection.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+            imageGridHeader.classList.remove('hidden');
             imageCount.textContent = `(${images.length})`;
 
             images.forEach(image => {
@@ -336,7 +354,11 @@
         }
 
         // Drag and drop handlers
-        dropZone.addEventListener('click', () => {
+        galleryDropZone.addEventListener('click', (e) => {
+            // Don't trigger if clicking on a button or image card
+            if (e.target.closest('button') || e.target.closest('.image-card')) {
+                return;
+            }
             fileInput.click();
         });
 
@@ -347,19 +369,22 @@
             }
         });
 
-        dropZone.addEventListener('dragover', (e) => {
+        galleryDropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
-            dropZone.classList.add('drag-over');
+            galleryDropZone.classList.add('drag-over');
         });
 
-        dropZone.addEventListener('dragleave', (e) => {
+        galleryDropZone.addEventListener('dragleave', (e) => {
             e.preventDefault();
-            dropZone.classList.remove('drag-over');
+            // Only remove if leaving the gallery entirely, not when hovering over children
+            if (e.target === galleryDropZone) {
+                galleryDropZone.classList.remove('drag-over');
+            }
         });
 
-        dropZone.addEventListener('drop', (e) => {
+        galleryDropZone.addEventListener('drop', (e) => {
             e.preventDefault();
-            dropZone.classList.remove('drag-over');
+            galleryDropZone.classList.remove('drag-over');
             
             const files = e.dataTransfer.files;
             if (files.length > 0) {
