@@ -96,7 +96,7 @@
     <script>
         // Check if user is already logged in
         if (Storage.isLoggedIn()) {
-            window.location.href = 'select-model.html';
+            window.location.href = 'moodboard.html';
         }
 
         const emailForm = document.getElementById('emailForm');
@@ -169,9 +169,9 @@
                 // Show success message
                 successMessage.classList.remove('hidden');
 
-                // Redirect to model selection
+                // Redirect to moodboard
                 setTimeout(() => {
-                    window.location.href = 'select-model.html';
+                    window.location.href = 'moodboard.html';
                 }, 1000);
 
             } catch (error) {

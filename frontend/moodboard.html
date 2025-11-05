@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moodboard - LLM Design Ideation Evaluator</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui']
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        html, body {
+            min-height: 100vh;
+            height: 100%;
+        }
+        
+        body {
+            font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
+            background-color: #f9fafb !important;
+            background-image:
+                radial-gradient(at 15% 20%, rgba(79, 70, 229, 0.1) 0, rgba(249, 250, 251, 0) 50%),
+                radial-gradient(at 85% 10%, rgba(236, 72, 153, 0.1) 0, rgba(249, 250, 251, 0) 55%),
+                radial-gradient(at 50% 95%, rgba(16, 185, 129, 0.12) 0, rgba(249, 250, 251, 0) 60%);
+            background-repeat: no-repeat;
+            background-size: 100% 100%;
+            background-attachment: fixed;
+        }
+
+        .gallery-drop-zone {
+            transition: all 0.3s ease;
+            min-height: 400px;
+        }
+
+        .gallery-drop-zone.drag-over {
+            background-color: rgba(79, 70, 229, 0.05);
+            border-color: #4f46e5;
+        }
+
+        .gallery-drop-zone.drag-over::after {
+            content: 'Drop images here';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #4f46e5;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .empty-state {
+            min-height: 400px;
+        }
+
+        .image-card {
+            transition: all 0.2s ease;
+        }
+
+        .image-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .delete-btn {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .image-card:hover .delete-btn {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="antialiased text-gray-900">
+    <div class="min-h-screen p-6">
+        <div class="max-w-6xl mx-auto">
+            <!-- Header -->
+            <header class="mb-8">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-3xl font-light tracking-tight text-gray-900 mb-2">Create Your Moodboard</h1>
+                        <p class="text-sm text-gray-600">Collect reference images before starting your design session</p>
+                        <p class="text-xs text-gray-500 mt-1" id="userEmail"></p>
+                    </div>
+                    <button
+                        id="logoutBtn"
+                        class="text-sm text-gray-600 hover:text-gray-900 font-medium"
+                    >
+                        Use different email
+                    </button>
+                </div>
+            </header>
+
+            <!-- Moodboard Gallery -->
+            <section class="bg-white border-2 border-dashed border-gray-300 rounded-2xl shadow-sm p-8 relative gallery-drop-zone" id="galleryDropZone">
+                <input type="file" id="fileInput" class="hidden" accept="image/png,image/jpeg,image/jpg,image/gif,image/webp" multiple>
+                
+                <!-- Empty State -->
+                <div id="emptyState" class="empty-state flex flex-col items-center justify-center text-center">
+                    <svg class="w-20 h-20 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                    <h3 class="text-2xl font-semibold text-gray-900 mb-2">Drop images here</h3>
+                    <p class="text-sm text-gray-600 mb-4">or click anywhere to browse your files</p>
+                    <p class="text-xs text-gray-500">Supports: PNG, JPG, JPEG, GIF, WebP (Max 10MB each)</p>
+                </div>
+
+                <!-- Upload Progress -->
+                <div id="uploadProgress" class="hidden mb-6">
+                    <div class="bg-gray-100 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-700">Uploading...</span>
+                            <span class="text-sm text-gray-600" id="uploadCount"></span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div id="progressBar" class="bg-blue-600 h-2 rounded-full transition-all" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="imageGridHeader" class="hidden flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold text-gray-900">
+                        Your Collection <span id="imageCount" class="text-gray-500 font-normal text-lg"></span>
+                    </h2>
+                    <button
+                        id="clearAllBtn"
+                        class="text-sm text-red-600 hover:text-red-700 font-medium"
+                    >
+                        Clear All
+                    </button>
+                </div>
+                
+                <!-- Image Grid -->
+                <div id="imageGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <!-- Image cards will be inserted here -->
+                </div>
+            </section>
+
+            <!-- Continue Button -->
+            <div class="flex justify-center pt-6">
+                <button
+                    id="continueBtn"
+                    class="inline-flex items-center justify-center px-8 py-3 rounded-lg bg-gray-900 text-white text-base font-medium hover:bg-gray-800 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    Continue to Model Selection
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="env.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/storage.js"></script>
+    
+    <script>
+        // Check if user is logged in
+        if (!Storage.isLoggedIn()) {
+            window.location.href = 'index.html';
+        }
+
+        const galleryDropZone = document.getElementById('galleryDropZone');
+        const fileInput = document.getElementById('fileInput');
+        const imageGrid = document.getElementById('imageGrid');
+        const imageGridHeader = document.getElementById('imageGridHeader');
+        const emptyState = document.getElementById('emptyState');
+        const imageCount = document.getElementById('imageCount');
+        const uploadProgress = document.getElementById('uploadProgress');
+        const progressBar = document.getElementById('progressBar');
+        const uploadCount = document.getElementById('uploadCount');
+        const continueBtn = document.getElementById('continueBtn');
+        const clearAllBtn = document.getElementById('clearAllBtn');
+        const userEmail = document.getElementById('userEmail');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        let images = [];
+        const userId = Storage.getUserId();
+
+        // Display user email
+        userEmail.textContent = `Logged in as: ${Storage.getUserEmail()}`;
+
+        // Handle logout
+        logoutBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to logout? Your moodboard will be saved.')) {
+                Storage.clearAll();
+                window.location.href = 'index.html';
+            }
+        });
+
+        // Initialize - load existing images
+        async function init() {
+            try {
+                const data = await API.getMoodboard(userId);
+                if (data.success && data.images.length > 0) {
+                    images = data.images;
+                    renderImages();
+                }
+            } catch (error) {
+                console.error('Error loading moodboard:', error);
+            }
+        }
+
+        // Render images in grid
+        function renderImages() {
+            imageGrid.innerHTML = '';
+            
+            if (images.length === 0) {
+                emptyState.classList.remove('hidden');
+                imageGridHeader.classList.add('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            imageGridHeader.classList.remove('hidden');
+            imageCount.textContent = `(${images.length})`;
+
+            images.forEach(image => {
+                const card = createImageCard(image);
+                imageGrid.appendChild(card);
+            });
+        }
+
+        // Create image card element
+        // Escape HTML special characters to prevent XSS
+        function escapeHTML(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function createImageCard(image) {
+            const card = document.createElement('div');
+            card.className = 'image-card relative bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm';
+            card.dataset.imageId = image.id;
+
+            const imageUrl = `${API.baseURL}/api/moodboard/image/${image.id}`;
+            const altText = escapeHTML(image.original_filename || 'Moodboard image');
+
+            card.innerHTML = `
+                <div class="aspect-square bg-gray-100 relative">
+                    <img 
+                        src="${imageUrl}" 
+                        alt="${altText}"
+                        class="w-full h-full object-cover"
+                        loading="lazy"
+                    >
+                </div>
+            `;
+
+            // Create delete button element
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-1.5 shadow-lg transition-colors';
+            deleteBtn.title = 'Delete image';
+            deleteBtn.innerHTML = `
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            `;
+            deleteBtn.addEventListener('click', function() {
+                deleteImage(image.id);
+            });
+
+            // Append delete button to the image container
+            card.querySelector('.aspect-square').appendChild(deleteBtn);
+            return card;
+        }
+
+        // Delete image
+        window.deleteImage = async function(imageId) {
+            if (!confirm('Remove this image from your moodboard?')) {
+                return;
+            }
+
+            try {
+                await API.deleteMoodboardImage(imageId);
+                images = images.filter(img => img.id !== imageId);
+                renderImages();
+            } catch (error) {
+                console.error('Error deleting image:', error);
+                alert('Failed to delete image. Please try again.');
+            }
+        };
+
+        // Clear all images
+        clearAllBtn.addEventListener('click', async () => {
+            if (!confirm('Remove all images from your moodboard?')) {
+                return;
+            }
+
+            try {
+                await API.clearMoodboard(userId);
+                images = [];
+                renderImages();
+            } catch (error) {
+                console.error('Error clearing moodboard:', error);
+                alert('Failed to clear moodboard. Please try again.');
+            }
+        });
+
+        // Handle file selection
+        function handleFiles(files) {
+            const validFiles = Array.from(files).filter(file => {
+                // Check file type
+                if (!file.type.match('image.*')) {
+                    alert(`${file.name} is not an image file.`);
+                    return false;
+                }
+                // Check file size (10MB)
+                if (file.size > 10 * 1024 * 1024) {
+                    alert(`${file.name} is too large. Maximum size is 10MB.`);
+                    return false;
+                }
+                return true;
+            });
+
+            if (validFiles.length > 0) {
+                uploadFiles(validFiles);
+            }
+        }
+
+        // Upload files
+        async function uploadFiles(files) {
+            uploadProgress.classList.remove('hidden');
+            continueBtn.disabled = true;
+
+            let completed = 0;
+            const total = files.length;
+
+            for (const file of files) {
+                try {
+                    uploadCount.textContent = `${completed + 1} of ${total}`;
+                    
+                    const result = await API.uploadMoodboardImage(userId, file);
+                    
+                    if (result.success) {
+                        images.push(result.image);
+                    }
+                    
+                    completed++;
+                    progressBar.style.width = `${(completed / total) * 100}%`;
+                    
+                } catch (error) {
+                    console.error(`Error uploading ${file.name}:`, error);
+                    alert(`Failed to upload ${file.name}: ${error.message}`);
+                }
+            }
+
+            // Hide progress after a moment
+            setTimeout(() => {
+                uploadProgress.classList.add('hidden');
+                progressBar.style.width = '0%';
+                continueBtn.disabled = false;
+            }, 500);
+
+            renderImages();
+        }
+
+        // Drag and drop handlers
+        galleryDropZone.addEventListener('click', (e) => {
+            // Don't trigger if clicking on a button or image card
+            if (e.target.closest('button') || e.target.closest('.image-card')) {
+                return;
+            }
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFiles(e.target.files);
+                e.target.value = ''; // Reset input
+            }
+        });
+
+        galleryDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            galleryDropZone.classList.add('drag-over');
+        });
+
+        galleryDropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            // Only remove if leaving the gallery entirely, not when hovering over children
+            if (e.target === galleryDropZone) {
+                galleryDropZone.classList.remove('drag-over');
+            }
+        });
+
+        galleryDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            galleryDropZone.classList.remove('drag-over');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFiles(files);
+            }
+        });
+
+        // Continue to model selection
+        continueBtn.addEventListener('click', () => {
+            window.location.href = 'select-model.html';
+        });
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

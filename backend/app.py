@@ -19,6 +19,7 @@ from backend.routes.chat import chat_bp
 from backend.routes.prompts import prompts_bp
 from backend.routes.admin import admin_bp
 from backend.routes.images import images_bp
+from backend.routes.moodboard import moodboard_bp
 import logging
 
 
@@ -63,6 +64,7 @@ def create_app():
     app.register_blueprint(prompts_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(images_bp)
+    app.register_blueprint(moodboard_bp)
     
     # Serve frontend files
     @app.route('/')
