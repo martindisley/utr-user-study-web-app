@@ -233,18 +233,29 @@
         }
 
         // Create image card element
+        // Escape HTML special characters to prevent XSS
+        function escapeHTML(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         function createImageCard(image) {
             const card = document.createElement('div');
             card.className = 'image-card relative bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm';
             card.dataset.imageId = image.id;
 
             const imageUrl = `${API.baseURL}/api/moodboard/image/${image.id}`;
+            const altText = escapeHTML(image.original_filename || 'Moodboard image');
 
             card.innerHTML = `
                 <div class="aspect-square bg-gray-100 relative">
                     <img 
                         src="${imageUrl}" 
-                        alt="${image.original_filename || 'Moodboard image'}"
+                        alt="${altText}"
                         class="w-full h-full object-cover"
                         loading="lazy"
                     >
