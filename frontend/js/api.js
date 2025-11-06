@@ -329,6 +329,102 @@ const API = {
 
         return await response.json();
     },
+
+    /**
+     * Submit a questionnaire response
+     * @param {Object} payload - { user_id, session_id (optional), questionnaire_type, responses }
+     * @returns {Promise<Object>} { success, response_id, message }
+     */
+    async submitQuestionnaire(payload) {
+        const response = await fetch(`${CONFIG.API_BASE_URL}/api/questionnaire/submit`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+            const message = await response.text();
+            try {
+                const error = JSON.parse(message || '{}');
+                throw new Error(error.error || 'Failed to submit questionnaire');
+            } catch (parseError) {
+                throw new Error(message || 'Failed to submit questionnaire');
+            }
+        }
+
+        return await response.json();
+    },
+
+    /**
+     * Get questionnaire responses for a user
+     * @param {number} userId - User ID
+     * @param {string} questionnaireType - Optional filter ('pre-activity' or 'post-activity')
+     * @param {number} sessionId - Optional session ID filter
+     * @returns {Promise<Object>} { success, responses }
+     */
+    async getQuestionnaireResponses(userId, questionnaireType = null, sessionId = null) {
+        let url = `${CONFIG.API_BASE_URL}/api/questionnaire/user/${userId}`;
+        const params = new URLSearchParams();
+        
+        if (questionnaireType) {
+            params.append('questionnaire_type', questionnaireType);
+        }
+        if (sessionId) {
+            params.append('session_id', sessionId);
+        }
+        
+        if (params.toString()) {
+            url += `?${params.toString()}`;
+        }
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch questionnaire responses');
+        }
+
+        return await response.json();
+    },
+
+    /**
+     * Check if a questionnaire has been completed
+     * @param {number} userId - User ID
+     * @param {string} questionnaireType - 'pre-activity' or 'post-activity'
+     * @param {number} sessionId - Optional session ID (required for post-activity)
+     * @returns {Promise<Object>} { completed, response_id (if completed) }
+     */
+    async checkQuestionnaireCompletion(userId, questionnaireType, sessionId = null) {
+        const payload = {
+            user_id: userId,
+            questionnaire_type: questionnaireType
+        };
+        
+        if (sessionId) {
+            payload.session_id = sessionId;
+        }
+
+        const response = await fetch(`${CONFIG.API_BASE_URL}/api/questionnaire/check`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+            const message = await response.text();
+            try {
+                const error = JSON.parse(message || '{}');
+                throw new Error(error.error || 'Failed to check questionnaire completion');
+            } catch (parseError) {
+                throw new Error(message || 'Failed to check questionnaire completion');
+            }
+        }
+
+        return await response.json();
+    },
 };
 
 // Export API object

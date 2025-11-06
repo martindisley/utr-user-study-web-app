@@ -82,6 +82,8 @@ const Storage = {
         localStorage.removeItem(CONFIG.APP_CONFIG.storageKeys.userEmail);
         localStorage.removeItem(CONFIG.APP_CONFIG.storageKeys.currentSessionId);
         localStorage.removeItem(CONFIG.APP_CONFIG.storageKeys.currentModel);
+        localStorage.removeItem('preActivityCompleted');
+        localStorage.removeItem('activityCount');
     },
 
     /**
@@ -95,7 +97,50 @@ const Storage = {
             sessionId: this.getSessionId(),
             modelName: this.getCurrentModel(),
             isLoggedIn: this.isLoggedIn(),
+            preActivityCompleted: this.getPreActivityCompleted(),
+            activityCount: this.getActivityCount(),
         };
+    },
+
+    /**
+     * Set pre-activity questionnaire completion status
+     * @param {boolean} completed - Whether pre-activity is completed
+     */
+    setPreActivityCompleted(completed) {
+        localStorage.setItem('preActivityCompleted', completed ? 'true' : 'false');
+    },
+
+    /**
+     * Get pre-activity questionnaire completion status
+     * @returns {boolean} True if pre-activity questionnaire completed
+     */
+    getPreActivityCompleted() {
+        return localStorage.getItem('preActivityCompleted') === 'true';
+    },
+
+    /**
+     * Get current activity count (number of models tested)
+     * @returns {number} Activity count
+     */
+    getActivityCount() {
+        const count = localStorage.getItem('activityCount');
+        return count ? parseInt(count) : 0;
+    },
+
+    /**
+     * Increment activity count
+     */
+    incrementActivityCount() {
+        const current = this.getActivityCount();
+        localStorage.setItem('activityCount', (current + 1).toString());
+    },
+
+    /**
+     * Reset activity tracking (for new study)
+     */
+    resetActivityTracking() {
+        localStorage.removeItem('preActivityCompleted');
+        localStorage.removeItem('activityCount');
     },
 };
 

@@ -117,7 +117,7 @@
                     id="continueBtn"
                     class="inline-flex items-center justify-center px-8 py-3 rounded-lg bg-gray-900 text-white text-base font-medium hover:bg-gray-800 transition-colors shadow-lg"
                 >
-                    Continue to Next Model
+                    Continue to Questionnaire
                 </button>
             </div>
         </div>
@@ -236,11 +236,8 @@
 
         // Continue to next model
         document.getElementById('continueBtn')?.addEventListener('click', () => {
-            // Clear current session
-            Storage.clearSession();
-            
-            // Navigate to model selection
-            window.location.href = 'select-model.html';
+            // Navigate to post-activity questionnaire
+            window.location.href = 'post-activity-questionnaire.html';
         });
 
         // Initialize on page load

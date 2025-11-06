@@ -170,3 +170,31 @@ class MoodboardImage(Base):
             'created_at': self.created_at.isoformat()
         }
 
+
+class QuestionnaireResponse(Base):
+    """QuestionnaireResponse model - stores participant responses to pre- and post-activity questionnaires."""
+    __tablename__ = 'questionnaire_responses'
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    session_id = Column(Integer, ForeignKey('sessions.id'), nullable=True, index=True)
+    questionnaire_type = Column(String(50), nullable=False)  # 'pre-activity' or 'post-activity'
+    responses = Column(Text, nullable=False)  # JSON string of question-answer pairs
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    # Relationships
+    user = relationship('User', backref='questionnaire_responses')
+    session = relationship('Session', backref='questionnaire_responses')
+
+    def to_dict(self):
+        """Convert questionnaire response to dictionary."""
+        import json
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'session_id': self.session_id,
+            'questionnaire_type': self.questionnaire_type,
+            'responses': json.loads(self.responses) if self.responses else {},
+            'created_at': self.created_at.isoformat()
+        }
+

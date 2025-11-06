@@ -6,7 +6,7 @@ from collections import Counter
 from flask import Blueprint, jsonify
 
 from backend.database import get_db_session
-from backend.models import User, Session, Message, Prompt, GeneratedImage
+from backend.models import User, Session, Message, Prompt, GeneratedImage, MoodboardImage, QuestionnaireResponse
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -63,12 +63,16 @@ def export_data():
             messages = db.query(Message).order_by(Message.timestamp).all()
             prompts = db.query(Prompt).order_by(Prompt.created_at).all()
             generated_images = db.query(GeneratedImage).order_by(GeneratedImage.created_at).all()
+            moodboard_images = db.query(MoodboardImage).order_by(MoodboardImage.created_at).all()
+            questionnaire_responses = db.query(QuestionnaireResponse).order_by(QuestionnaireResponse.created_at).all()
 
             # Build lookup for sessions per user and messages per session
             sessions_by_user = {}
             session_lookup = {}
             message_lookup = {}
             prompt_lookup = {}
+            moodboard_by_user = {}
+            questionnaires_by_user = {}
 
             for session in sessions:
                 session_dict = {
@@ -141,16 +145,46 @@ def export_data():
                     'created_at': image.created_at.isoformat()
                 })
 
+            # Add moodboard images by user
+            for moodboard_image in moodboard_images:
+                if moodboard_image.user_id not in moodboard_by_user:
+                    moodboard_by_user[moodboard_image.user_id] = []
+                moodboard_by_user[moodboard_image.user_id].append({
+                    'id': moodboard_image.id,
+                    'image_path': moodboard_image.image_path,
+                    'original_filename': moodboard_image.original_filename,
+                    'created_at': moodboard_image.created_at.isoformat()
+                })
+
+            # Add questionnaire responses by user
+            for response in questionnaire_responses:
+                if response.user_id not in questionnaires_by_user:
+                    questionnaires_by_user[response.user_id] = []
+                questionnaires_by_user[response.user_id].append({
+                    'id': response.id,
+                    'session_id': response.session_id,
+                    'questionnaire_type': response.questionnaire_type,
+                    'responses': response.to_dict()['responses'],  # Already parsed JSON
+                    'created_at': response.created_at.isoformat()
+                })
+
             users_data = []
             for user in users:
                 user_sessions = sessions_by_user.get(user.id, [])
                 prompt_total = sum(session['prompt_count'] for session in user_sessions)
+                user_moodboard = moodboard_by_user.get(user.id, [])
+                user_questionnaires = questionnaires_by_user.get(user.id, [])
+                
                 users_data.append({
                     'id': user.id,
                     'email': user.email,
                     'created_at': user.created_at.isoformat(),
                     'session_count': len(user_sessions),
                     'prompt_count': prompt_total,
+                    'moodboard_image_count': len(user_moodboard),
+                    'questionnaire_count': len(user_questionnaires),
+                    'moodboard_images': user_moodboard,
+                    'questionnaire_responses': user_questionnaires,
                     'sessions': user_sessions
                 })
 
@@ -160,6 +194,8 @@ def export_data():
                 'total_messages': len(messages),
                 'total_prompts': len(prompts),
                 'total_generated_images': len(generated_images),
+                'total_moodboard_images': len(moodboard_images),
+                'total_questionnaire_responses': len(questionnaire_responses),
                 'sessions_by_model': dict(Counter(session.model_name for session in sessions))
             }
 
@@ -203,6 +239,8 @@ def get_stats():
             total_messages = db.query(func.count(Message.id)).scalar()
             total_prompts = db.query(func.count(Prompt.id)).scalar()
             total_generated_images = db.query(func.count(GeneratedImage.id)).scalar()
+            total_moodboard_images = db.query(func.count(MoodboardImage.id)).scalar()
+            total_questionnaires = db.query(func.count(QuestionnaireResponse.id)).scalar()
             
             # Sessions by model
             sessions_by_model = {}
@@ -232,15 +270,28 @@ def get_stats():
             for model_name, count in image_counts:
                 images_by_model[model_name] = count
 
+            # Questionnaires by type
+            questionnaires_by_type = {}
+            questionnaire_counts = db.query(
+                QuestionnaireResponse.questionnaire_type,
+                func.count(QuestionnaireResponse.id)
+            ).group_by(QuestionnaireResponse.questionnaire_type).all()
+
+            for q_type, count in questionnaire_counts:
+                questionnaires_by_type[q_type] = count
+
             return jsonify({
                 'total_users': total_users,
                 'total_sessions': total_sessions,
                 'total_messages': total_messages,
                 'total_prompts': total_prompts,
                 'total_generated_images': total_generated_images,
+                'total_moodboard_images': total_moodboard_images,
+                'total_questionnaire_responses': total_questionnaires,
                 'sessions_by_model': sessions_by_model,
                 'prompts_by_model': prompts_by_model,
-                'images_by_model': images_by_model
+                'images_by_model': images_by_model,
+                'questionnaires_by_type': questionnaires_by_type
             }), 200
             
         finally:

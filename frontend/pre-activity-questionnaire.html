@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pre-Activity Questionnaire - LLM Design Ideation Evaluator</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui']
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        html, body {
+            min-height: 100vh;
+            height: 100%;
+        }
+        
+        body {
+            font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
+            background-color: #f9fafb !important;
+            background-image:
+                radial-gradient(at 15% 20%, rgba(79, 70, 229, 0.1) 0, rgba(249, 250, 251, 0) 50%),
+                radial-gradient(at 85% 10%, rgba(236, 72, 153, 0.1) 0, rgba(249, 250, 251, 0) 55%),
+                radial-gradient(at 50% 95%, rgba(16, 185, 129, 0.12) 0, rgba(249, 250, 251, 0) 60%);
+            background-repeat: no-repeat;
+            background-size: 100% 100%;
+            background-attachment: fixed;
+        }
+
+        .question-section {
+            margin-bottom: 2rem;
+        }
+
+        .radio-option {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .radio-option:hover {
+            background-color: #f3f4f6;
+        }
+
+        .radio-option input[type="radio"]:checked + label {
+            font-weight: 500;
+            color: #1f2937;
+        }
+    </style>
+</head>
+<body class="antialiased text-gray-900">
+    <div class="min-h-screen p-6">
+        <div class="max-w-3xl mx-auto">
+            <!-- Header -->
+            <header class="text-center mb-8">
+                <h1 class="text-3xl font-light tracking-tight text-gray-900 mb-2">Pre-Activity Questionnaire</h1>
+                <p class="text-sm text-gray-600">Please complete this questionnaire before beginning the study</p>
+                <p class="text-xs text-gray-500 mt-1" id="userEmail"></p>
+            </header>
+
+            <!-- Progress indicator -->
+            <div class="mb-8 bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+                <div class="flex items-center justify-between text-sm mb-2">
+                    <span class="font-medium text-gray-700">Progress</span>
+                    <span class="text-gray-600">Questionnaire 1 of 4</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-indigo-600 h-2 rounded-full" style="width: 25%"></div>
+                </div>
+            </div>
+
+            <!-- Questionnaire Form -->
+            <form id="questionnaireForm" class="bg-white border border-gray-200 rounded-2xl shadow-sm p-8">
+                
+                <!-- Question 1: Demographics - Age Range -->
+                <div class="question-section">
+                    <label class="block text-base font-semibold text-gray-900 mb-3">
+                        1. What is your age range?
+                        <span class="text-red-500">*</span>
+                    </label>
+                    <div class="space-y-2">
+                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
+                            <input type="radio" id="age_18_24" name="age_range" value="18-24" required class="mr-3 h-4 w-4">
+                            <label for="age_18_24" class="text-gray-700 cursor-pointer flex-1">18-24</label>
+                        </div>
+                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
+                            <input type="radio" id="age_25_34" name="age_range" value="25-34" class="mr-3 h-4 w-4">
+                            <label for="age_25_34" class="text-gray-700 cursor-pointer flex-1">25-34</label>
+                        </div>
+                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
+                            <input type="radio" id="age_35_44" name="age_range" value="35-44" class="mr-3 h-4 w-4">
+                            <label for="age_35_44" class="text-gray-700 cursor-pointer flex-1">35-44</label>
+                        </div>
+                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
+                            <input type="radio" id="age_45_plus" name="age_range" value="45+" class="mr-3 h-4 w-4">
+                            <label for="age_45_plus" class="text-gray-700 cursor-pointer flex-1">45+</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question 2: Experience with AI tools -->
+                <div class="question-section">
+                    <label class="block text-base font-semibold text-gray-900 mb-3">
+                        2. How would you rate your experience with AI-powered design tools?
+                        <span class="text-red-500">*</span>
+                    </label>
+                    <div class="space-y-2">
+                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
+                            <input type="radio" id="exp_none" name="ai_experience" value="none" required class="mr-3 h-4 w-4">
+                            <label for="exp_none" class="text-gray-700 cursor-pointer flex-1">No experience</label>
+                        </div>
+                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
+                            <input type="radio" id="exp_beginner" name="ai_experience" value="beginner" class="mr-3 h-4 w-4">
+                            <label for="exp_beginner" class="text-gray-700 cursor-pointer flex-1">Beginner</label>
+                        </div>
+                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
+                            <input type="radio" id="exp_intermediate" name="ai_experience" value="intermediate" class="mr-3 h-4 w-4">
+                            <label for="exp_intermediate" class="text-gray-700 cursor-pointer flex-1">Intermediate</label>
+                        </div>
+                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
+                            <input type="radio" id="exp_advanced" name="ai_experience" value="advanced" class="mr-3 h-4 w-4">
+                            <label for="exp_advanced" class="text-gray-700 cursor-pointer flex-1">Advanced</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question 3: Design background -->
+                <div class="question-section">
+                    <label class="block text-base font-semibold text-gray-900 mb-3">
+                        3. What best describes your design background?
+                        <span class="text-red-500">*</span>
+                    </label>
+                    <div class="space-y-2">
+                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
+                            <input type="radio" id="bg_professional" name="design_background" value="professional" required class="mr-3 h-4 w-4">
+                            <label for="bg_professional" class="text-gray-700 cursor-pointer flex-1">Professional designer</label>
+                        </div>
+                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
+                            <input type="radio" id="bg_student" name="design_background" value="student" class="mr-3 h-4 w-4">
+                            <label for="bg_student" class="text-gray-700 cursor-pointer flex-1">Design student</label>
+                        </div>
+                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
+                            <input type="radio" id="bg_hobbyist" name="design_background" value="hobbyist" class="mr-3 h-4 w-4">
+                            <label for="bg_hobbyist" class="text-gray-700 cursor-pointer flex-1">Hobbyist/Enthusiast</label>
+                        </div>
+                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
+                            <input type="radio" id="bg_none" name="design_background" value="none" class="mr-3 h-4 w-4">
+                            <label for="bg_none" class="text-gray-700 cursor-pointer flex-1">No design background</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question 4: Open text - Expectations -->
+                <div class="question-section">
+                    <label for="expectations" class="block text-base font-semibold text-gray-900 mb-3">
+                        4. What are your expectations for this study? (Optional)
+                    </label>
+                    <textarea
+                        id="expectations"
+                        name="expectations"
+                        rows="4"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none"
+                        placeholder="Share your thoughts..."
+                    ></textarea>
+                </div>
+
+                <!-- Error message -->
+                <div id="errorMessage" class="hidden mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <p class="text-sm text-red-700"></p>
+                </div>
+
+                <!-- Submit button -->
+                <div class="flex justify-end pt-4">
+                    <button
+                        type="submit"
+                        id="submitBtn"
+                        class="inline-flex items-center justify-center px-8 py-3 bg-indigo-600 text-white text-base font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <span id="btnText">Continue to Moodboard</span>
+                        <span id="btnSpinner" class="hidden ml-2">
+                            <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="env.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/storage.js"></script>
+    
+    <script>
+        // Check if user is logged in
+        if (!Storage.isLoggedIn()) {
+            window.location.href = 'index.html';
+        }
+
+        const questionnaireForm = document.getElementById('questionnaireForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+        const btnSpinner = document.getElementById('btnSpinner');
+        const errorMessage = document.getElementById('errorMessage');
+        const userEmail = document.getElementById('userEmail');
+
+        const userId = Storage.getUserId();
+
+        // Display user email
+        userEmail.textContent = `Logged in as: ${Storage.getUserEmail()}`;
+
+        // Check if pre-activity questionnaire already completed
+        async function checkCompletion() {
+            try {
+                const result = await API.checkQuestionnaireCompletion(userId, 'pre-activity');
+                if (result.completed) {
+                    // Already completed, redirect to moodboard
+                    window.location.href = 'moodboard.html';
+                }
+            } catch (error) {
+                console.error('Error checking questionnaire completion:', error);
+            }
+        }
+
+        // Set loading state
+        function setLoading(loading) {
+            submitBtn.disabled = loading;
+            if (loading) {
+                btnText.classList.add('hidden');
+                btnSpinner.classList.remove('hidden');
+            } else {
+                btnText.classList.remove('hidden');
+                btnSpinner.classList.add('hidden');
+            }
+        }
+
+        // Show error message
+        function showError(message) {
+            errorMessage.querySelector('p').textContent = message;
+            errorMessage.classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Clear error message
+        function clearError() {
+            errorMessage.classList.add('hidden');
+        }
+
+        // Handle form submission
+        questionnaireForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearError();
+            setLoading(true);
+
+            try {
+                // Collect form data
+                const formData = new FormData(questionnaireForm);
+                const responses = {};
+                
+                for (let [key, value] of formData.entries()) {
+                    responses[key] = value;
+                }
+
+                // Submit questionnaire
+                const result = await API.submitQuestionnaire({
+                    user_id: userId,
+                    questionnaire_type: 'pre-activity',
+                    responses: responses
+                });
+
+                if (result.success) {
+                    // Mark pre-activity as completed
+                    Storage.setPreActivityCompleted(true);
+                    
+                    // Redirect to moodboard
+                    window.location.href = 'moodboard.html';
+                } else {
+                    showError('Failed to submit questionnaire. Please try again.');
+                    setLoading(false);
+                }
+
+            } catch (error) {
+                console.error('Error submitting questionnaire:', error);
+                showError(error.message || 'Failed to submit questionnaire. Please try again.');
+                setLoading(false);
+            }
+        });
+
+        // Initialize
+        checkCompletion();
+    </script>
+</body>
+</html>

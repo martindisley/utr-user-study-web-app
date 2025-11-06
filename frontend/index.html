@@ -96,7 +96,12 @@
     <script>
         // Check if user is already logged in
         if (Storage.isLoggedIn()) {
-            window.location.href = 'moodboard.html';
+            // Check if pre-activity questionnaire is completed
+            if (Storage.getPreActivityCompleted()) {
+                window.location.href = 'moodboard.html';
+            } else {
+                window.location.href = 'pre-activity-questionnaire.html';
+            }
         }
 
         const emailForm = document.getElementById('emailForm');
@@ -169,9 +174,9 @@
                 // Show success message
                 successMessage.classList.remove('hidden');
 
-                // Redirect to moodboard
+                // Redirect to pre-activity questionnaire
                 setTimeout(() => {
-                    window.location.href = 'moodboard.html';
+                    window.location.href = 'pre-activity-questionnaire.html';
                 }, 1000);
 
             } catch (error) {
