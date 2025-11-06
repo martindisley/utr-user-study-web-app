@@ -20,7 +20,7 @@ Login → Pre-Activity Questionnaire → Moodboard → Select Model → Chat & G
 2. **Pre-Activity Questionnaire** (`pre-activity-questionnaire.html`) - One-time demographic and background questions
 3. **Moodboard** (`moodboard.html`) - User uploads reference images (optional)
 4. **Model Selection** (`select-model.html`) - User manually selects next model to test
-5. **Chat & Generate** (`chat.html`) - User interacts with AI model to generate prompts
+5. **Ideation & Generate** (`ideation.html`) - User interacts with AI model (or uses notes in unaided mode) to generate prompts
 6. **Image Gallery** (`gallery.html`) - User views generated images
 7. **Post-Activity Questionnaire** (`post-activity-questionnaire.html`) - Feedback about the specific model just tested
 8. Steps 4-7 repeat for 3 different models (determined by randomized order assigned to participant)

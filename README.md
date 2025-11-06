@@ -150,7 +150,7 @@ utr-user-study-web-app/
 │   ├── index.html          # Login page
 │   ├── moodboard.html      # Moodboard creation page
 │   ├── select-model.html   # Model selection
-│   ├── chat.html           # Chat interface
+│   ├── ideation.html       # Ideation interface (chat or notes based on model)
 │   ├── gallery.html        # Generated images
 │   └── js/
 │       ├── config.js       # Configuration

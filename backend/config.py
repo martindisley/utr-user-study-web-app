@@ -39,6 +39,11 @@ AVAILABLE_MODELS = [
         'id': 'martindisley/unlearning-to-rest:latest',
         'name': 'Unlearning To Rest',
         'description': "Ablated test model wher the concept of 'the chair' has been removed"
+    },
+    {
+        'id': 'unaided',
+        'name': 'Unaided',
+        'description': 'Complete the activity without AI assistance'
     }
 ]
 

@@ -142,6 +142,10 @@ def send_message():
             if not session:
                 return jsonify({'error': 'Session not found'}), 404
 
+            # For unaided mode, don't process chat messages
+            if session.model_name == 'unaided':
+                return jsonify({'error': 'Chat is not available in unaided mode'}), 400
+
             context_cutoff = session.context_reset_at or session.created_at
 
             # Save user message
@@ -232,6 +236,10 @@ def reset_session():
             session = db.query(Session).filter(Session.id == session_id).first()
             if not session:
                 return jsonify({'error': 'Session not found'}), 404
+
+            # For unaided mode, reset is not applicable
+            if session.model_name == 'unaided':
+                return jsonify({'error': 'Reset is not available in unaided mode'}), 400
 
             context_cutoff = session.context_reset_at or session.created_at
             active_messages = db.query(Message).filter(
