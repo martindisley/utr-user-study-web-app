@@ -212,18 +212,6 @@ See `.env.example` for a full template.
 
 For detailed examples, see API endpoint documentation in backend source files.
 
-## Configuration
-
-The app can be configured via environment variables:
-
-```bash
-OLLAMA_HOST=http://localhost:11434  # Ollama server location
-DEBUG=false                          # Debug mode
-PORT=5000                           # Server port
-```
-
-For VM deployment, update `OLLAMA_HOST` to point to the VM's IP address.
-
 ## Data Export
 
 Study data can be exported via:

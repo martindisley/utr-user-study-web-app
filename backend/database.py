@@ -6,6 +6,8 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 from backend.models import Base
 from backend import config
 import os
+from functools import wraps
+from flask import jsonify
 
 
 # Create engine
@@ -21,6 +23,21 @@ SessionLocal = scoped_session(sessionmaker(
     autoflush=False,
     bind=engine
 ))
+
+
+def with_db_session(func):
+    """Decorator that provides and manages a database session for a route handler."""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        db = get_db_session()
+        try:
+            return func(*args, db=db, **kwargs)
+        except Exception as e:
+            db.rollback()
+            raise
+        finally:
+            db.close()
+    return wrapper
 
 
 def init_db():

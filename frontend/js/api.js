@@ -7,6 +7,22 @@ const API = {
     baseURL: CONFIG.API_BASE_URL,
     
     /**
+     * Parse error response from API
+     * @param {Response} response - Fetch response object
+     * @param {string} defaultMessage - Default error message
+     * @returns {Promise<Error>} Error object with message
+     */
+    async _parseError(response, defaultMessage) {
+        const message = await response.text();
+        try {
+            const error = JSON.parse(message || '{}');
+            throw new Error(error.error || defaultMessage);
+        } catch (parseError) {
+            throw new Error(message || defaultMessage);
+        }
+    },
+    
+    /**
      * Login with email
      * @param {string} email - User's email address
      * @returns {Promise<Object>} User data { user_id, email, is_new_user }
@@ -21,13 +37,7 @@ const API = {
         });
 
         if (!response.ok) {
-            const message = await response.text();
-            try {
-                const error = JSON.parse(message || '{}');
-                throw new Error(error.error || 'Login failed');
-            } catch (parseError) {
-                throw new Error(message || 'Login failed');
-            }
+            await this._parseError(response, 'Login failed');
         }
 
         return await response.json();
@@ -66,13 +76,7 @@ const API = {
         });
 
         if (!response.ok) {
-            const message = await response.text();
-            try {
-                const error = JSON.parse(message || '{}');
-                throw new Error(error.error || 'Failed to create session');
-            } catch (parseError) {
-                throw new Error(message || 'Failed to create session');
-            }
+            await this._parseError(response, 'Failed to create session');
         }
 
         return await response.json();
@@ -97,13 +101,7 @@ const API = {
         });
 
         if (!response.ok) {
-            const message = await response.text();
-            try {
-                const error = JSON.parse(message || '{}');
-                throw new Error(error.error || 'Failed to send message');
-            } catch (parseError) {
-                throw new Error(message || 'Failed to send message');
-            }
+            await this._parseError(response, 'Failed to send message');
         }
 
         return await response.json();
@@ -126,13 +124,7 @@ const API = {
         });
 
         if (!response.ok) {
-            const message = await response.text();
-            try {
-                const error = JSON.parse(message || '{}');
-                throw new Error(error.error || 'Failed to reset session');
-            } catch (parseError) {
-                throw new Error(message || 'Failed to reset session');
-            }
+            await this._parseError(response, 'Failed to reset session');
         }
 
         return await response.json();
@@ -169,13 +161,7 @@ const API = {
         });
 
         if (!response.ok) {
-            const message = await response.text();
-            try {
-                const error = JSON.parse(message || '{}');
-                throw new Error(error.error || 'Failed to save prompt');
-            } catch (parseError) {
-                throw new Error(message || 'Failed to save prompt');
-            }
+            await this._parseError(response, 'Failed to save prompt');
         }
 
         return await response.json();
@@ -197,13 +183,7 @@ const API = {
         });
 
         if (!response.ok) {
-            const message = await response.text();
-            try {
-                const error = JSON.parse(message || '{}');
-                throw new Error(error.error || 'Failed to update prompt');
-            } catch (parseError) {
-                throw new Error(message || 'Failed to update prompt');
-            }
+            await this._parseError(response, 'Failed to update prompt');
         }
 
         return await response.json();
@@ -220,13 +200,7 @@ const API = {
         });
 
         if (!response.ok) {
-            const message = await response.text();
-            try {
-                const error = JSON.parse(message || '{}');
-                throw new Error(error.error || 'Failed to delete prompt');
-            } catch (parseError) {
-                throw new Error(message || 'Failed to delete prompt');
-            }
+            await this._parseError(response, 'Failed to delete prompt');
         }
 
         return await response.json();
@@ -249,13 +223,7 @@ const API = {
         });
 
         if (!response.ok) {
-            const message = await response.text();
-            try {
-                const error = JSON.parse(message || '{}');
-                throw new Error(error.error || 'Failed to end session');
-            } catch (parseError) {
-                throw new Error(message || 'Failed to end session');
-            }
+            await this._parseError(response, 'Failed to end session');
         }
 
         return await response.json();
@@ -307,13 +275,7 @@ const API = {
         });
 
         if (!response.ok) {
-            const message = await response.text();
-            try {
-                const error = JSON.parse(message || '{}');
-                throw new Error(error.error || 'Failed to upload image');
-            } catch (parseError) {
-                throw new Error(message || 'Failed to upload image');
-            }
+            await this._parseError(response, 'Failed to upload image');
         }
 
         return await response.json();
@@ -345,13 +307,7 @@ const API = {
         });
 
         if (!response.ok) {
-            const message = await response.text();
-            try {
-                const error = JSON.parse(message || '{}');
-                throw new Error(error.error || 'Failed to delete image');
-            } catch (parseError) {
-                throw new Error(message || 'Failed to delete image');
-            }
+            await this._parseError(response, 'Failed to delete image');
         }
 
         return await response.json();
@@ -368,13 +324,7 @@ const API = {
         });
 
         if (!response.ok) {
-            const message = await response.text();
-            try {
-                const error = JSON.parse(message || '{}');
-                throw new Error(error.error || 'Failed to clear moodboard');
-            } catch (parseError) {
-                throw new Error(message || 'Failed to clear moodboard');
-            }
+            await this._parseError(response, 'Failed to clear moodboard');
         }
 
         return await response.json();
