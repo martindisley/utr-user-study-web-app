@@ -9,10 +9,6 @@ from backend.models import Session, Prompt, Message
 prompts_bp = Blueprint('prompts', __name__)
 
 
-def _session_not_found():
-    return jsonify({'error': 'Session not found'}), 404
-
-
 @prompts_bp.route('/api/session/<int:session_id>/prompts', methods=['GET'])
 def list_prompts(session_id):
     """Return all prompts captured for a session."""
@@ -20,7 +16,7 @@ def list_prompts(session_id):
     try:
         session = db.query(Session).filter(Session.id == session_id).first()
         if not session:
-            return _session_not_found()
+            return jsonify({'error': 'Session not found'}), 404
 
         prompts = (
             db.query(Prompt)
@@ -50,7 +46,7 @@ def create_prompt(session_id):
     try:
         session = db.query(Session).filter(Session.id == session_id).first()
         if not session:
-            return _session_not_found()
+            return jsonify({'error': 'Session not found'}), 404
 
         source_message = None
         if source_message_id is not None:
