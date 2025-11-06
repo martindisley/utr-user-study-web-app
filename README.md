@@ -18,7 +18,8 @@ This application allows undergraduate design students to participate in an ideat
 - **Frontend**: Vanilla JavaScript + Tailwind CSS (deployed on Netlify)
 - **Backend**: Python Flask + SQLAlchemy + Gunicorn
 - **Database**: SQLite
-- **LLM**: Ollama (llama3.2:3b + UnlearningToRest)
+- **LLM**: Hugging Face Inference API (Llama 3.2:3B + UnlearningToRest)
+- **Image Generation**: Replicate API
 - **Deployment**: Backend on home workstation via Tailscale Funnel, frontend on Netlify
 
 ## Quick Start
@@ -26,8 +27,8 @@ This application allows undergraduate design students to participate in an ideat
 ### Prerequisites
 
 - Python 3.8+
-- Ollama installed and running
-- Models pulled: `llama3.2:3b` and `UnlearningToRest`
+- Hugging Face API token (for LLM access)
+- Replicate API token (for image generation)
 - Tailscale (for public access via Funnel)
 
 ### 1. Install Backend Dependencies
@@ -51,21 +52,18 @@ Create a `.env` file in the project root:
 cp .env.example .env
 ```
 
-Then edit `.env` and add your Replicate API token:
+Then edit `.env` and add your API tokens:
 
 ```bash
-REPLICATE_API_TOKEN=your_actual_token_here
+HUGGINGFACE_API_TOKEN=your_huggingface_token_here
+REPLICATE_API_TOKEN=your_replicate_token_here
 ```
 
-Get your Replicate API token from: https://replicate.com/account/api-tokens
+Get your tokens from:
+- Hugging Face: https://huggingface.co/settings/tokens
+- Replicate: https://replicate.com/account/api-tokens
 
-### 3. Start Ollama
-
-```bash
-ollama serve > logs/ollama.log 2>&1 &
-```
-
-### 4. Start the Backend Server
+### 3. Start the Backend Server
 
 **Development Mode:**
 ```bash
@@ -77,7 +75,7 @@ ollama serve > logs/ollama.log 2>&1 &
 ./start_optimized.sh
 ```
 
-This starts both Ollama and Flask with Gunicorn (8 workers) for concurrent users.
+This starts Flask with Gunicorn (8 workers) for concurrent users.
 
 Or manually with Gunicorn:
 ```bash
@@ -91,7 +89,7 @@ gunicorn -w 4 -b 0.0.0.0:5000 \
   backend.app:create_app()
 ```
 
-### 5. Enable Public Access with Tailscale Funnel
+### 4. Enable Public Access with Tailscale Funnel
 
 ```bash
 sudo tailscale serve reset
@@ -173,11 +171,11 @@ utr-user-study-web-app/
 The app uses environment variables for configuration. These are loaded from a `.env` file:
 
 ```bash
-REPLICATE_API_TOKEN=your_token_here  # Required for image generation
-OLLAMA_HOST=http://localhost:11434   # Ollama server location
-DEBUG=false                          # Debug mode
-PORT=5000                           # Server port
-CORS_ORIGINS=*                       # Allowed CORS origins
+HUGGINGFACE_API_TOKEN=your_hf_token   # Required for LLM access
+REPLICATE_API_TOKEN=your_token_here   # Required for image generation
+DEBUG=false                           # Debug mode
+PORT=5000                            # Server port
+CORS_ORIGINS=*                        # Allowed CORS origins
 ```
 
 See `.env.example` for a full template.
@@ -217,12 +215,10 @@ For detailed examples, see API endpoint documentation in backend source files.
 The app can be configured via environment variables:
 
 ```bash
-OLLAMA_HOST=http://localhost:11434  # Ollama server location
+HUGGINGFACE_API_TOKEN=your_token     # Hugging Face API token
 DEBUG=false                          # Debug mode
 PORT=5000                           # Server port
 ```
-
-For VM deployment, update `OLLAMA_HOST` to point to the VM's IP address.
 
 ## Data Export
 
@@ -244,16 +240,12 @@ View logs in real-time:
 ```bash
 # API logs
 tail -f logs/error.log logs/access.log
-
-# Ollama logs
-tail -f logs/ollama.log
 ```
 
 ## Shutdown Procedure
 
 1. Stop Gunicorn (Ctrl+C or terminate the process)
 2. Reset Tailscale funnel: `sudo tailscale serve reset`
-3. Stop Ollama: `pkill ollama`
 
 ## Development Notes
 
@@ -273,14 +265,13 @@ lsof -i :5000
 kill -9 <PID>
 ```
 
-### Ollama Not Responding
+### Hugging Face API Errors
 ```bash
-# Check if Ollama is running
-curl http://localhost:11434/api/tags
+# Verify your API token is set correctly
+echo $HUGGINGFACE_API_TOKEN
 
-# Restart Ollama
-pkill ollama
-ollama serve > logs/ollama.log 2>&1 &
+# Test the API connection
+python -c "from huggingface_hub import InferenceClient; client = InferenceClient(token='your_token'); print('Connected!')"
 ```
 
 ### CORS Errors

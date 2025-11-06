@@ -1,5 +1,5 @@
 """
-Model routes - handles listing available Ollama models.
+Model routes - handles listing available models from Hugging Face.
 """
 from flask import Blueprint, jsonify
 from backend import config
@@ -16,14 +16,16 @@ def get_models():
         {
             "models": [
                 {
-                    "id": "llama3.2:3b",
+                    "id": "meta-llama/Llama-3.2-3B-Instruct",
                     "name": "Meta Llama 3.2",
-                    "description": "Standard Llama 3.2 model with 3B parameters"
+                    "description": "Standard Llama 3.2 model with 3B parameters",
+                    "endpoint": "meta-llama/Llama-3.2-3B-Instruct"
                 },
                 {
-                    "id": "martindisley/unlearning-to-rest:latest",
+                    "id": "martindisley/unlearning-to-rest",
                     "name": "Unlearning To Rest",
-                    "description": "Custom fine-tuned model"
+                    "description": "Custom ablated model",
+                    "endpoint": "martindisley/unlearning-to-rest"
                 }
             ]
         }

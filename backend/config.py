@@ -16,8 +16,13 @@ DATABASE_PATH = os.path.join(PROJECT_ROOT, 'data', 'study.db')
 SQLALCHEMY_DATABASE_URI = f'sqlite:///{DATABASE_PATH}'
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-# Ollama configuration
-OLLAMA_HOST = os.environ.get('OLLAMA_HOST', 'http://localhost:11434')
+# Hugging Face configuration
+HUGGINGFACE_API_TOKEN = os.environ.get('HUGGINGFACE_API_TOKEN', '')
+HUGGINGFACE_ENDPOINT = os.environ.get('HUGGINGFACE_ENDPOINT', '')
+
+# OpenRouter configuration
+OPENROUTER_API_KEY = os.environ.get('OPENROUTER_API_KEY', '')
+OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
 
 # Replicate configuration
 REPLICATE_API_TOKEN = os.environ.get('REPLICATE_API_TOKEN', '')
@@ -31,14 +36,18 @@ IMAGES_DIR = os.path.join(PROJECT_ROOT, 'data', 'images')
 # Available models for the study
 AVAILABLE_MODELS = [
     {
-        'id': 'llama3.2:3b',
+        'id': 'meta-llama/Llama-3.2-3B-Instruct',
         'name': 'Meta Llama 3.2',
-        'description': 'Standard Llama 3.2 model with 3B parameters'
+        'description': 'Standard Llama 3.2 model with 3B parameters',
+        'provider': 'openrouter',
+        'model_id': 'meta-llama/llama-3.2-3b-instruct'
     },
     {
-        'id': 'martindisley/unlearning-to-rest:latest',
+        'id': 'martindisley/unlearning-to-rest',
         'name': 'Unlearning To Rest',
-        'description': "Ablated test model wher the concept of 'the chair' has been removed"
+        'description': "Ablated test model where the concept of 'the chair' has been removed",
+        'provider': 'huggingface'
+        # endpoint is retrieved from HUGGINGFACE_ENDPOINT at runtime
     }
 ]
 

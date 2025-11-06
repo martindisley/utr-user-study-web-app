@@ -4,48 +4,111 @@ Chat routes - handles session creation, chat messages, and reset functionality.
 import json
 import logging
 from datetime import datetime
-from urllib.parse import urljoin
-from urllib import request as urllib_request, error as urllib_error
+import requests
 
 from flask import Blueprint, request, jsonify
 
 from backend.database import get_db_session
 from backend.models import Session, Message, Prompt
 from backend import config
-import ollama
 
 
 logger = logging.getLogger(__name__)
 
 
-def clear_ollama_context(model_name: str) -> bool:
-    """Attempt to clear the active conversation context for a model on the Ollama server."""
-    host = (config.OLLAMA_HOST or '').rstrip('/')
-    if not host:
-        return False
+def call_openrouter_api(model_id, messages, api_key):
+    """
+    Call OpenRouter API with chat messages.
+    
+    Args:
+        model_id: The model identifier (e.g., 'meta-llama/llama-3.2-3b-instruct')
+        messages: List of message dictionaries with 'role' and 'content'
+        api_key: OpenRouter API key
+    
+    Returns:
+        The assistant's response text
+    """
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://unlearning-to-rest.study",
+        "X-Title": "Unlearning to Rest User Study"
+    }
+    
+    payload = {
+        "model": model_id,
+        "messages": messages
+    }
+    
+    response = requests.post(
+        config.OPENROUTER_API_URL,
+        headers=headers,
+        json=payload,
+        timeout=60
+    )
+    response.raise_for_status()
+    
+    result = response.json()
+    
+    # Extract message from OpenRouter response
+    if 'choices' in result and len(result['choices']) > 0:
+        return result['choices'][0]['message']['content'].strip()
+    else:
+        raise ValueError(f"Unexpected OpenRouter response format: {result}")
 
-    attempts = [
-        ('/api/chat/clear', {'model': model_name}),
-        ('/api/chat', {'model': model_name, 'messages': [], 'clear': True, 'stream': False}),
-    ]
 
-    for path, payload in attempts:
-        url = urljoin(f'{host}/', path.lstrip('/'))
-        request_body = json.dumps(payload).encode('utf-8')
-        req = urllib_request.Request(url, data=request_body, headers={'Content-Type': 'application/json'})
+def call_huggingface_endpoint(endpoint_url, messages, token):
+    """
+    Call Hugging Face Inference Endpoint with chat messages.
+    
+    Args:
+        endpoint_url: The Hugging Face endpoint URL
+        messages: List of message dictionaries with 'role' and 'content'
+        token: Hugging Face API token
+    
+    Returns:
+        The assistant's response text
+    """
+    # Format messages into a single prompt for the model
+    # Most models expect a specific chat format
+    prompt = ""
+    for msg in messages:
+        if msg['role'] == 'user':
+            prompt += f"User: {msg['content']}\n"
+        elif msg['role'] == 'assistant':
+            prompt += f"Assistant: {msg['content']}\n"
+    
+    prompt += "Assistant:"
+    
+    headers = {
+        "Accept": "application/json",
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    
+    payload = {
+        "inputs": prompt,
+        "parameters": {
+            "max_new_tokens": 500,
+            "temperature": 0.7,
+            "top_p": 0.9,
+            "return_full_text": False
+        }
+    }
+    
+    response = requests.post(endpoint_url, headers=headers, json=payload, timeout=60)
+    response.raise_for_status()
+    
+    result = response.json()
+    
+    # Handle different response formats
+    if isinstance(result, list) and len(result) > 0:
+        return result[0].get('generated_text', '').strip()
+    elif isinstance(result, dict):
+        return result.get('generated_text', '').strip()
+    else:
+        return str(result).strip()
 
-        try:
-            with urllib_request.urlopen(req, timeout=5) as response:
-                if 200 <= getattr(response, 'status', 200) < 400:
-                    return True
-        except urllib_error.HTTPError as exc:
-            if exc.code in (404, 405):
-                continue
-            logger.warning('Ollama clear request failed (%s): %s', path, exc)
-        except Exception as exc:  # pylint: disable=broad-except
-            logger.warning('Ollama clear request error (%s): %s', path, exc)
-
-    return False
 
 chat_bp = Blueprint('chat', __name__)
 
@@ -159,22 +222,57 @@ def send_message():
                 Message.timestamp >= context_cutoff
             ).order_by(Message.timestamp).all()
 
-            # Format messages for Ollama
-            ollama_messages = [
+            # Format messages for API
+            api_messages = [
                 {'role': msg.role, 'content': msg.content}
                 for msg in messages
             ]
 
-            # Get response from Ollama
+            # Get model configuration
+            model_config = next(
+                (m for m in config.AVAILABLE_MODELS if m['id'] == session.model_name),
+                None
+            )
+            if not model_config:
+                return jsonify({'error': 'Model configuration not found'}), 404
+            
+            provider = model_config.get('provider', 'huggingface')
+
+            # Get response from the appropriate API
             try:
-                response = ollama.chat(
-                    model=session.model_name,
-                    messages=ollama_messages,
-                    options={'host': config.OLLAMA_HOST}
-                )
-                assistant_message = response['message']['content']
-            except Exception as ollama_error:
-                return jsonify({'error': f'Ollama error: {str(ollama_error)}'}), 503
+                if provider == 'openrouter':
+                    # Use OpenRouter API
+                    if not config.OPENROUTER_API_KEY:
+                        return jsonify({'error': 'OPENROUTER_API_KEY not configured'}), 500
+                    
+                    model_id = model_config.get('model_id')
+                    assistant_message = call_openrouter_api(
+                        model_id=model_id,
+                        messages=api_messages,
+                        api_key=config.OPENROUTER_API_KEY
+                    )
+                elif provider == 'huggingface':
+                    # Use Hugging Face Inference Endpoint
+                    endpoint_url = model_config.get('endpoint') or config.HUGGINGFACE_ENDPOINT
+                    if not endpoint_url:
+                        return jsonify({'error': 'HUGGINGFACE_ENDPOINT not configured'}), 500
+                    if not config.HUGGINGFACE_API_TOKEN:
+                        return jsonify({'error': 'HUGGINGFACE_API_TOKEN not configured'}), 500
+                    
+                    assistant_message = call_huggingface_endpoint(
+                        endpoint_url=endpoint_url,
+                        messages=api_messages,
+                        token=config.HUGGINGFACE_API_TOKEN
+                    )
+                else:
+                    return jsonify({'error': f'Unknown provider: {provider}'}), 500
+                    
+            except requests.exceptions.RequestException as api_error:
+                logger.error(f"API error ({provider}): {str(api_error)}", exc_info=True)
+                return jsonify({'error': f'{provider.title()} API error: {str(api_error)}'}), 503
+            except Exception as e:
+                logger.error(f"Unexpected error: {str(e)}", exc_info=True)
+                return jsonify({'error': f'Unexpected error: {str(e)}'}), 500
             
             # Save assistant message
             assistant_msg = Message(
@@ -213,8 +311,7 @@ def reset_session():
             "success": true,
             "session_id": 123,
             "message": "Session reset successfully",
-            "cleared_messages": 9,
-            "ollama_cleared": true
+            "cleared_messages": 9
         }
     """
     try:
@@ -243,14 +340,14 @@ def reset_session():
             db.add(session)
             db.commit()
 
-            cleared = clear_ollama_context(session.model_name)
+            # Note: Hugging Face Inference API is stateless, so no context clearing needed
+            # The context is managed by only sending messages since the last reset
 
             return jsonify({
                 'success': True,
                 'session_id': session.id,
                 'message': 'Session reset successfully',
-                'cleared_messages': active_messages,
-                'ollama_cleared': cleared
+                'cleared_messages': active_messages
             }), 200
             
         finally:

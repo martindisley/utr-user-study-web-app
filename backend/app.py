@@ -93,8 +93,9 @@ if __name__ == '__main__':
     print(f"{'='*60}")
     print(f"Server running at: http://{config.HOST}:{config.PORT}")
     print(f"Database: {config.DATABASE_PATH}")
-    print(f"Ollama host: {config.OLLAMA_HOST}")
-    print(f"Available models: {', '.join([m['id'] for m in config.AVAILABLE_MODELS])}")
+    print(f"OpenRouter API: {'Configured' if config.OPENROUTER_API_KEY else 'Not configured'}")
+    print(f"Hugging Face API: {'Configured' if config.HUGGINGFACE_API_TOKEN else 'Not configured'}")
+    print(f"Available models: {', '.join([m['name'] for m in config.AVAILABLE_MODELS])}")
     print(f"{'='*60}\n")
     
     app.run(
