@@ -228,6 +228,11 @@
             window.location.href = 'index.html';
         }
 
+        // Check if study already completed
+        if (Storage.getStudyCompleted()) {
+            window.location.href = 'study-complete.html';
+        }
+
         const currentModel = Storage.getCurrentModel();
         const isUnaided = currentModel === 'unaided';
 

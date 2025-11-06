@@ -303,6 +303,11 @@
             window.location.href = 'index.html';
         }
 
+        // Check if study already completed
+        if (Storage.getStudyCompleted()) {
+            window.location.href = 'study-complete.html';
+        }
+
         // Check if there's an active session
         const sessionId = Storage.getSessionId();
         if (!sessionId) {
@@ -420,6 +425,9 @@
                 if (result.success) {
                     // Increment activity count
                     Storage.incrementActivityCount();
+                    
+                    // Mark current model as completed
+                    Storage.addCompletedModel(modelName);
                     
                     // Proceed to next step
                     proceedToNextStep();
