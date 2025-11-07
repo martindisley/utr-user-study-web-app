@@ -86,8 +86,8 @@
     <!-- Model selection logic -->
     <script>
         // Check if user is logged in
-        if (!Storage.isLoggedIn()) {
-            window.location.href = 'index.html';
+            if (!Storage.isLoggedIn()) {
+                window.location.href = 'login.html';
         }
 
         // Check if study already completed
@@ -114,7 +114,7 @@
         // Handle logout
         logoutBtn.addEventListener('click', () => {
             Storage.clearAll();
-            window.location.href = 'index.html';
+              window.location.href = 'login.html';
         });
 
         // Create model card HTML

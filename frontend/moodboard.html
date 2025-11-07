@@ -168,7 +168,7 @@
     <script>
         // Check if user is logged in
         if (!Storage.isLoggedIn()) {
-            window.location.href = 'index.html';
+        window.location.href = 'login.html';
         }
 
         // Check if study already completed
@@ -200,7 +200,7 @@
         logoutBtn.addEventListener('click', () => {
             if (confirm('Are you sure you want to logout? Your moodboard will be saved.')) {
                 Storage.clearAll();
-                window.location.href = 'index.html';
+                window.location.href = 'login.html';
             }
         });
 

@@ -71,7 +71,7 @@ def create_app():
     # Serve frontend files
     @app.route('/')
     def index():
-        return send_from_directory('../frontend', 'index.html')
+        return send_from_directory('../frontend', 'login.html')
     
     @app.route('/<path:path>')
     def serve_static(path):
