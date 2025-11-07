@@ -519,14 +519,21 @@
                 bubble.appendChild(text);
                 contentGroup.appendChild(bubble);
 
+                let timeElement = null;
                 if (timeLabel) {
-                    const time = document.createElement('span');
-                    time.className = 'text-xs text-gray-400';
-                    time.textContent = timeLabel;
-                    contentGroup.appendChild(time);
+                    timeElement = document.createElement('span');
+                    timeElement.className = 'text-xs text-gray-400';
+                    timeElement.textContent = timeLabel;
+                    contentGroup.appendChild(timeElement);
                 }
 
                 wrapper.appendChild(contentGroup);
+
+                wrapper.dataset.role = 'user';
+                wrapper._textEl = text;
+                wrapper._timeEl = timeElement;
+                wrapper._contentContainer = contentGroup;
+
                 return wrapper;
             }
 
@@ -549,15 +556,21 @@
             bubble.appendChild(text);
             contentContainer.appendChild(bubble);
 
+            let timeElement = null;
             if (timeLabel) {
-                const time = document.createElement('span');
-                time.className = 'text-xs text-gray-400 mt-2 block';
-                time.textContent = timeLabel;
-                contentContainer.appendChild(time);
+                timeElement = document.createElement('span');
+                timeElement.className = 'text-xs text-gray-400 mt-2 block';
+                timeElement.textContent = timeLabel;
+                contentContainer.appendChild(timeElement);
             }
 
             wrapper.appendChild(avatar);
             wrapper.appendChild(contentContainer);
+
+            wrapper.dataset.role = 'assistant';
+            wrapper._textEl = text;
+            wrapper._timeEl = timeElement;
+            wrapper._contentContainer = contentContainer;
 
             return wrapper;
         }
@@ -566,6 +579,7 @@
             const messageBubble = createMessageBubble(role, content, timestamp);
             messages.appendChild(messageBubble);
             scrollToBottom();
+            return messageBubble;
         }
 
         function scrollToBottom() {
@@ -598,15 +612,77 @@
                 messageInput.value = '';
                 setTyping(true);
 
+                const assistantWrapper = addMessage('assistant', '', null);
+                const assistantTextNode = assistantWrapper?._textEl || null;
+                let assistantTimeNode = assistantWrapper?._timeEl || null;
+                const assistantContainer = assistantWrapper?._contentContainer || null;
+
+                let streamedContent = '';
+                let receivedFirstToken = false;
+
                 try {
                     const sessionId = Storage.getSessionId();
-                    const response = await API.sendMessage(sessionId, message);
+                    if (!sessionId) {
+                        throw new Error('Session missing. Please refresh the page.');
+                    }
+                    const response = await API.sendMessage(sessionId, message, {
+                        onToken: (delta) => {
+                            if (!delta) {
+                                return;
+                            }
+
+                            streamedContent += delta;
+
+                            if (assistantTextNode) {
+                                assistantTextNode.textContent = streamedContent;
+                            }
+
+                            if (!receivedFirstToken) {
+                                setTyping(false);
+                                receivedFirstToken = true;
+                            }
+
+                            scrollToBottom();
+                        },
+                    });
+
                     setTyping(false);
-                    addMessage('assistant', response.response, response.timestamp);
+
+                    if (assistantTextNode) {
+                        assistantTextNode.textContent = response.response;
+                    }
+
+                    if (!assistantTimeNode && assistantContainer) {
+                        assistantTimeNode = document.createElement('span');
+                        assistantTimeNode.className = 'text-xs text-gray-400 mt-2 block';
+                        assistantContainer.appendChild(assistantTimeNode);
+                        assistantWrapper._timeEl = assistantTimeNode;
+                    }
+
+                    if (assistantTimeNode && response.timestamp) {
+                        assistantTimeNode.textContent = new Date(response.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+                    }
+
+                    if (assistantWrapper) {
+                        assistantWrapper.dataset.messageId = response.message_id;
+                    }
+
+                    scrollToBottom();
                 } catch (error) {
                     console.error('Error sending message:', error);
                     setTyping(false);
-                    addMessage('assistant', `Error: ${error.message}. Please try again.`, new Date().toISOString());
+
+                    const fallbackMessage = error?.message
+                        ? `Error: ${error.message}. Please try again.`
+                        : 'An unexpected error occurred. Please try again.';
+
+                    if (assistantTextNode) {
+                        assistantTextNode.textContent = fallbackMessage;
+                    } else {
+                        addMessage('assistant', fallbackMessage, new Date().toISOString());
+                    }
+
+                    scrollToBottom();
                 } finally {
                     messageInput.disabled = false;
                     sendBtn.disabled = false;
