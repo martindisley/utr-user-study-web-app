@@ -41,8 +41,9 @@
     <div class="min-h-screen p-6">
         <div class="max-w-5xl mx-auto">
             <header class="text-center mb-12">
-                <h1 class="text-3xl font-light tracking-tight text-gray-900 mb-2">Select a Model</h1>
+                <h1 class="text-3xl font-light tracking-tight text-gray-900 mb-2">Start a Session</h1>
                 <p class="text-sm text-gray-600" id="userEmail"></p>
+                <p class="text-sm text-indigo-600 font-medium mt-2" id="progressInfo"></p>
             </header>
 
             <section class="bg-white border border-gray-200 rounded-2xl shadow-sm p-8">
@@ -89,15 +90,26 @@
             window.location.href = 'index.html';
         }
 
+        // Check if study already completed
+        if (Storage.getStudyCompleted()) {
+            window.location.href = 'study-complete.html';
+        }
+
         const loadingState = document.getElementById('loadingState');
         const errorState = document.getElementById('errorState');
         const errorMessage = document.getElementById('errorMessage');
         const modelsGrid = document.getElementById('modelsGrid');
         const userEmail = document.getElementById('userEmail');
+        const progressInfo = document.getElementById('progressInfo');
         const logoutBtn = document.getElementById('logoutBtn');
 
-        // Display user email
+        // Display user email and progress
         userEmail.textContent = `Logged in as: ${Storage.getUserEmail()}`;
+        
+        const activityCount = Storage.getActivityCount();
+        if (activityCount > 0) {
+            progressInfo.textContent = `Activities completed: ${activityCount} of 3`;
+        }
 
         // Handle logout
         logoutBtn.addEventListener('click', () => {
@@ -162,14 +174,37 @@
         // Load and display models
         async function loadModels() {
             try {
-                const data = await API.getModels();
+                const userId = Storage.getUserId();
                 
-                // Hide loading, show models
+                // Fetch available models and completed models from backend
+                const [modelsData, completedData] = await Promise.all([
+                    API.getModels(),
+                    API.getCompletedModels(userId)
+                ]);
+                
+                // Filter out completed models
+                const completedModels = completedData.completed_models || [];
+                const availableModels = modelsData.models.filter(model => !completedModels.includes(model.id));
+                
+                // Sync localStorage with backend data
+                localStorage.setItem('completedModels', JSON.stringify(completedModels));
+                
+                // Hide loading
                 loadingState.classList.add('hidden');
+                
+                // Check if any models are available
+                if (availableModels.length === 0) {
+                    // No models left, something went wrong or user completed all
+                    errorState.classList.remove('hidden');
+                    errorMessage.textContent = 'No models available. You may have already completed all activities.';
+                    return;
+                }
+                
+                // Show models grid
                 modelsGrid.classList.remove('hidden');
                 
-                // Create and append model cards
-                data.models.forEach(model => {
+                // Create and append model cards for available models only
+                availableModels.forEach(model => {
                     const card = createModelCard(model);
                     modelsGrid.appendChild(card);
                 });

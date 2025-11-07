@@ -53,6 +53,10 @@
             font-weight: 500;
             color: #1f2937;
         }
+
+        .question-section input[type="radio"] {
+            accent-color: #111827;
+        }
     </style>
 </head>
 <body class="antialiased text-gray-900">
@@ -72,102 +76,200 @@
                     <span class="text-gray-600">Questionnaire 1 of 4</span>
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-2">
-                    <div class="bg-indigo-600 h-2 rounded-full" style="width: 25%"></div>
+                    <div class="bg-gray-900 h-2 rounded-full" style="width: 25%"></div>
                 </div>
             </div>
 
             <!-- Questionnaire Form -->
             <form id="questionnaireForm" class="bg-white border border-gray-200 rounded-2xl shadow-sm p-8">
                 
-                <!-- Question 1: Demographics - Age Range -->
+                <h2 class="text-xl font-semibold text-gray-900 mb-6">Demographics</h2>
+
+                <!-- Question 1: Age bracket -->
                 <div class="question-section">
                     <label class="block text-base font-semibold text-gray-900 mb-3">
-                        1. What is your age range?
+                        1. Which of the following age brackets do you fall into?
                         <span class="text-red-500">*</span>
                     </label>
                     <div class="space-y-2">
                         <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
-                            <input type="radio" id="age_18_24" name="age_range" value="18-24" required class="mr-3 h-4 w-4">
+                            <input type="radio" id="age_under_18" name="age_bracket" value="Under 18" required class="mr-3 h-4 w-4">
+                            <label for="age_under_18" class="text-gray-700 cursor-pointer flex-1">Under 18</label>
+                        </div>
+                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
+                            <input type="radio" id="age_18_24" name="age_bracket" value="18-24" class="mr-3 h-4 w-4">
                             <label for="age_18_24" class="text-gray-700 cursor-pointer flex-1">18-24</label>
                         </div>
                         <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
-                            <input type="radio" id="age_25_34" name="age_range" value="25-34" class="mr-3 h-4 w-4">
+                            <input type="radio" id="age_25_34" name="age_bracket" value="25-34" class="mr-3 h-4 w-4">
                             <label for="age_25_34" class="text-gray-700 cursor-pointer flex-1">25-34</label>
                         </div>
                         <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
-                            <input type="radio" id="age_35_44" name="age_range" value="35-44" class="mr-3 h-4 w-4">
+                            <input type="radio" id="age_35_44" name="age_bracket" value="35-44" class="mr-3 h-4 w-4">
                             <label for="age_35_44" class="text-gray-700 cursor-pointer flex-1">35-44</label>
                         </div>
                         <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
-                            <input type="radio" id="age_45_plus" name="age_range" value="45+" class="mr-3 h-4 w-4">
-                            <label for="age_45_plus" class="text-gray-700 cursor-pointer flex-1">45+</label>
+                            <input type="radio" id="age_45_54" name="age_bracket" value="45-54" class="mr-3 h-4 w-4">
+                            <label for="age_45_54" class="text-gray-700 cursor-pointer flex-1">45-54</label>
+                        </div>
+                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
+                            <input type="radio" id="age_55_64" name="age_bracket" value="55-64" class="mr-3 h-4 w-4">
+                            <label for="age_55_64" class="text-gray-700 cursor-pointer flex-1">55-64</label>
+                        </div>
+                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
+                            <input type="radio" id="age_65_74" name="age_bracket" value="65-74" class="mr-3 h-4 w-4">
+                            <label for="age_65_74" class="text-gray-700 cursor-pointer flex-1">65-74</label>
+                        </div>
+                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
+                            <input type="radio" id="age_75_plus" name="age_bracket" value="75 or older" class="mr-3 h-4 w-4">
+                            <label for="age_75_plus" class="text-gray-700 cursor-pointer flex-1">75 or older</label>
+                        </div>
+                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
+                            <input type="radio" id="age_prefer_not" name="age_bracket" value="Prefer not to say" class="mr-3 h-4 w-4">
+                            <label for="age_prefer_not" class="text-gray-700 cursor-pointer flex-1">Prefer not to say</label>
                         </div>
                     </div>
                 </div>
 
-                <!-- Question 2: Experience with AI tools -->
+                <!-- Question 2: Gender -->
                 <div class="question-section">
                     <label class="block text-base font-semibold text-gray-900 mb-3">
-                        2. How would you rate your experience with AI-powered design tools?
+                        2. Which of the following best describes your gender?
                         <span class="text-red-500">*</span>
                     </label>
                     <div class="space-y-2">
                         <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
-                            <input type="radio" id="exp_none" name="ai_experience" value="none" required class="mr-3 h-4 w-4">
-                            <label for="exp_none" class="text-gray-700 cursor-pointer flex-1">No experience</label>
+                            <input type="radio" id="gender_male" name="gender" value="Male" required class="mr-3 h-4 w-4">
+                            <label for="gender_male" class="text-gray-700 cursor-pointer flex-1">Male</label>
                         </div>
                         <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
-                            <input type="radio" id="exp_beginner" name="ai_experience" value="beginner" class="mr-3 h-4 w-4">
-                            <label for="exp_beginner" class="text-gray-700 cursor-pointer flex-1">Beginner</label>
+                            <input type="radio" id="gender_female" name="gender" value="Female" class="mr-3 h-4 w-4">
+                            <label for="gender_female" class="text-gray-700 cursor-pointer flex-1">Female</label>
                         </div>
                         <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
-                            <input type="radio" id="exp_intermediate" name="ai_experience" value="intermediate" class="mr-3 h-4 w-4">
-                            <label for="exp_intermediate" class="text-gray-700 cursor-pointer flex-1">Intermediate</label>
+                            <input type="radio" id="gender_nonbinary" name="gender" value="Non-Binary" class="mr-3 h-4 w-4">
+                            <label for="gender_nonbinary" class="text-gray-700 cursor-pointer flex-1">Non-Binary</label>
                         </div>
                         <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
-                            <input type="radio" id="exp_advanced" name="ai_experience" value="advanced" class="mr-3 h-4 w-4">
-                            <label for="exp_advanced" class="text-gray-700 cursor-pointer flex-1">Advanced</label>
+                            <input type="radio" id="gender_other" name="gender" value="Other" class="mr-3 h-4 w-4">
+                            <label for="gender_other" class="text-gray-700 cursor-pointer flex-1">Other</label>
+                        </div>
+                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
+                            <input type="radio" id="gender_prefer_not" name="gender" value="Prefer not to say" class="mr-3 h-4 w-4">
+                            <label for="gender_prefer_not" class="text-gray-700 cursor-pointer flex-1">Prefer not to say</label>
                         </div>
                     </div>
                 </div>
 
-                <!-- Question 3: Design background -->
+                <!-- Question 3: English first language -->
                 <div class="question-section">
                     <label class="block text-base font-semibold text-gray-900 mb-3">
-                        3. What best describes your design background?
+                        3. We will ask you to use English to interact with the models in this study. Is English your first language?
                         <span class="text-red-500">*</span>
                     </label>
                     <div class="space-y-2">
                         <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
-                            <input type="radio" id="bg_professional" name="design_background" value="professional" required class="mr-3 h-4 w-4">
-                            <label for="bg_professional" class="text-gray-700 cursor-pointer flex-1">Professional designer</label>
+                            <input type="radio" id="english_yes" name="english_first_language" value="Yes" required class="mr-3 h-4 w-4">
+                            <label for="english_yes" class="text-gray-700 cursor-pointer flex-1">Yes</label>
                         </div>
                         <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
-                            <input type="radio" id="bg_student" name="design_background" value="student" class="mr-3 h-4 w-4">
-                            <label for="bg_student" class="text-gray-700 cursor-pointer flex-1">Design student</label>
-                        </div>
-                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
-                            <input type="radio" id="bg_hobbyist" name="design_background" value="hobbyist" class="mr-3 h-4 w-4">
-                            <label for="bg_hobbyist" class="text-gray-700 cursor-pointer flex-1">Hobbyist/Enthusiast</label>
-                        </div>
-                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
-                            <input type="radio" id="bg_none" name="design_background" value="none" class="mr-3 h-4 w-4">
-                            <label for="bg_none" class="text-gray-700 cursor-pointer flex-1">No design background</label>
+                            <input type="radio" id="english_no" name="english_first_language" value="No" class="mr-3 h-4 w-4">
+                            <label for="english_no" class="text-gray-700 cursor-pointer flex-1">No</label>
                         </div>
                     </div>
                 </div>
 
-                <!-- Question 4: Open text - Expectations -->
+                <h2 class="text-xl font-semibold text-gray-900 mb-6 mt-8">Generative AI Experience</h2>
+
+                <!-- Question 4: LLM usage for administrative tasks -->
                 <div class="question-section">
-                    <label for="expectations" class="block text-base font-semibold text-gray-900 mb-3">
-                        4. What are your expectations for this study? (Optional)
+                    <label class="block text-base font-semibold text-gray-900 mb-3">
+                        4. How often do you use a Large Language Model (such as ChatGPT, Claude or Gemini) for administrative or knowledge work tasks (routine and non-creative tasks that require information and expertise and problem solving)?
+                        <span class="text-red-500">*</span>
+                    </label>
+                    <div class="space-y-2">
+                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
+                            <input type="radio" id="admin_never" name="llm_admin_frequency" value="Never" required class="mr-3 h-4 w-4">
+                            <label for="admin_never" class="text-gray-700 cursor-pointer flex-1">Never</label>
+                        </div>
+                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
+                            <input type="radio" id="admin_less_monthly" name="llm_admin_frequency" value="Less than once a month" class="mr-3 h-4 w-4">
+                            <label for="admin_less_monthly" class="text-gray-700 cursor-pointer flex-1">Less than once a month</label>
+                        </div>
+                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
+                            <input type="radio" id="admin_monthly" name="llm_admin_frequency" value="Once a month" class="mr-3 h-4 w-4">
+                            <label for="admin_monthly" class="text-gray-700 cursor-pointer flex-1">Once a month</label>
+                        </div>
+                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
+                            <input type="radio" id="admin_2_3_monthly" name="llm_admin_frequency" value="2-3 times a month" class="mr-3 h-4 w-4">
+                            <label for="admin_2_3_monthly" class="text-gray-700 cursor-pointer flex-1">2-3 times a month</label>
+                        </div>
+                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
+                            <input type="radio" id="admin_weekly" name="llm_admin_frequency" value="Once a week" class="mr-3 h-4 w-4">
+                            <label for="admin_weekly" class="text-gray-700 cursor-pointer flex-1">Once a week</label>
+                        </div>
+                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
+                            <input type="radio" id="admin_several_weekly" name="llm_admin_frequency" value="Several times a week" class="mr-3 h-4 w-4">
+                            <label for="admin_several_weekly" class="text-gray-700 cursor-pointer flex-1">Several times a week</label>
+                        </div>
+                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
+                            <input type="radio" id="admin_daily" name="llm_admin_frequency" value="Daily" class="mr-3 h-4 w-4">
+                            <label for="admin_daily" class="text-gray-700 cursor-pointer flex-1">Daily</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question 5: LLM usage for creative tasks -->
+                <div class="question-section">
+                    <label class="block text-base font-semibold text-gray-900 mb-3">
+                        5. How often do you use a Large Language Model (such as ChatGPT, Claude or Gemini) for creative tasks?
+                        <span class="text-red-500">*</span>
+                    </label>
+                    <div class="space-y-2">
+                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
+                            <input type="radio" id="creative_never" name="llm_creative_frequency" value="Never" required class="mr-3 h-4 w-4">
+                            <label for="creative_never" class="text-gray-700 cursor-pointer flex-1">Never</label>
+                        </div>
+                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
+                            <input type="radio" id="creative_less_monthly" name="llm_creative_frequency" value="Less than once a month" class="mr-3 h-4 w-4">
+                            <label for="creative_less_monthly" class="text-gray-700 cursor-pointer flex-1">Less than once a month</label>
+                        </div>
+                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
+                            <input type="radio" id="creative_monthly" name="llm_creative_frequency" value="Once a month" class="mr-3 h-4 w-4">
+                            <label for="creative_monthly" class="text-gray-700 cursor-pointer flex-1">Once a month</label>
+                        </div>
+                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
+                            <input type="radio" id="creative_2_3_monthly" name="llm_creative_frequency" value="2-3 times a month" class="mr-3 h-4 w-4">
+                            <label for="creative_2_3_monthly" class="text-gray-700 cursor-pointer flex-1">2-3 times a month</label>
+                        </div>
+                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
+                            <input type="radio" id="creative_weekly" name="llm_creative_frequency" value="Once a week" class="mr-3 h-4 w-4">
+                            <label for="creative_weekly" class="text-gray-700 cursor-pointer flex-1">Once a week</label>
+                        </div>
+                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
+                            <input type="radio" id="creative_several_weekly" name="llm_creative_frequency" value="Several times a week" class="mr-3 h-4 w-4">
+                            <label for="creative_several_weekly" class="text-gray-700 cursor-pointer flex-1">Several times a week</label>
+                        </div>
+                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
+                            <input type="radio" id="creative_daily" name="llm_creative_frequency" value="Daily" class="mr-3 h-4 w-4">
+                            <label for="creative_daily" class="text-gray-700 cursor-pointer flex-1">Daily</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question 6: LLMs in creative process -->
+                <div class="question-section">
+                    <label for="creative_process" class="block text-base font-semibold text-gray-900 mb-3">
+                        6. How do Large Language Models fit into your creative process, what role do they play at different stages (ideation, development, etc.) and how do you feel they perform at assisting you in creative tasks?
+                        <span class="text-red-500">*</span>
                     </label>
                     <textarea
-                        id="expectations"
-                        name="expectations"
-                        rows="4"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none"
-                        placeholder="Share your thoughts..."
+                        id="creative_process"
+                        name="creative_process"
+                        rows="6"
+                        required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none"
+                        placeholder="Please describe your experience with LLMs in your creative process..."
                     ></textarea>
                 </div>
 
@@ -181,7 +283,7 @@
                     <button
                         type="submit"
                         id="submitBtn"
-                        class="inline-flex items-center justify-center px-8 py-3 bg-indigo-600 text-white text-base font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                        class="inline-flex items-center justify-center px-8 py-3 bg-gray-900 text-white text-base font-medium rounded-lg hover:bg-gray-800 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <span id="btnText">Continue to Moodboard</span>
                         <span id="btnSpinner" class="hidden ml-2">
@@ -206,6 +308,11 @@
         // Check if user is logged in
         if (!Storage.isLoggedIn()) {
             window.location.href = 'index.html';
+        }
+
+        // Check if study already completed
+        if (Storage.getStudyCompleted()) {
+            window.location.href = 'study-complete.html';
         }
 
         const questionnaireForm = document.getElementById('questionnaireForm');

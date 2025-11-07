@@ -96,11 +96,18 @@
     <script>
         // Check if user is already logged in
         if (Storage.isLoggedIn()) {
-            // Check if pre-activity questionnaire is completed
-            if (Storage.getPreActivityCompleted()) {
-                window.location.href = 'moodboard.html';
+            // Check if study is completed
+            if (Storage.getStudyCompleted()) {
+                // Study already completed, don't allow re-entry
+                alert('You have already completed this study. Thank you for your participation!');
+                Storage.clearAll();
             } else {
-                window.location.href = 'pre-activity-questionnaire.html';
+                // Check if pre-activity questionnaire is completed
+                if (Storage.getPreActivityCompleted()) {
+                    window.location.href = 'moodboard.html';
+                } else {
+                    window.location.href = 'pre-activity-questionnaire.html';
+                }
             }
         }
 
@@ -170,6 +177,31 @@
                 
                 // Save user data
                 Storage.saveUser(response.user_id, response.email);
+
+                // Check study status from backend
+                try {
+                    const status = await API.getStudyStatus(response.user_id);
+                    
+                    // Sync frontend state with backend
+                    if (status.study_completed) {
+                        Storage.setStudyCompleted(true);
+                        alert('You have already completed this study. Thank you for your participation!');
+                        Storage.clearAll();
+                        setLoading(false);
+                        return;
+                    }
+                    
+                    if (status.pre_activity_completed) {
+                        Storage.setPreActivityCompleted(true);
+                    }
+                    
+                    // Set activity count from backend
+                    localStorage.setItem('activityCount', status.completed_activities.toString());
+                    
+                } catch (statusError) {
+                    console.error('Error checking study status:', statusError);
+                    // Continue anyway - better to let them in than block them
+                }
 
                 // Show success message
                 successMessage.classList.remove('hidden');

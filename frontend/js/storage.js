@@ -84,6 +84,8 @@ const Storage = {
         localStorage.removeItem(CONFIG.APP_CONFIG.storageKeys.currentModel);
         localStorage.removeItem('preActivityCompleted');
         localStorage.removeItem('activityCount');
+        localStorage.removeItem('studyCompleted');
+        localStorage.removeItem('completedModels');
     },
 
     /**
@@ -141,6 +143,52 @@ const Storage = {
     resetActivityTracking() {
         localStorage.removeItem('preActivityCompleted');
         localStorage.removeItem('activityCount');
+    },
+
+    /**
+     * Set study completed status
+     * @param {boolean} completed - Whether study is completed
+     */
+    setStudyCompleted(completed) {
+        localStorage.setItem('studyCompleted', completed ? 'true' : 'false');
+    },
+
+    /**
+     * Get study completed status
+     * @returns {boolean} True if study is completed
+     */
+    getStudyCompleted() {
+        return localStorage.getItem('studyCompleted') === 'true';
+    },
+
+    /**
+     * Get completed model IDs
+     * @returns {Array<string>} Array of completed model IDs
+     */
+    getCompletedModels() {
+        const completed = localStorage.getItem('completedModels');
+        return completed ? JSON.parse(completed) : [];
+    },
+
+    /**
+     * Add a model to the completed list
+     * @param {string} modelId - Model ID to mark as completed
+     */
+    addCompletedModel(modelId) {
+        const completed = this.getCompletedModels();
+        if (!completed.includes(modelId)) {
+            completed.push(modelId);
+            localStorage.setItem('completedModels', JSON.stringify(completed));
+        }
+    },
+
+    /**
+     * Check if a model has been completed
+     * @param {string} modelId - Model ID to check
+     * @returns {boolean} True if model has been completed
+     */
+    isModelCompleted(modelId) {
+        return this.getCompletedModels().includes(modelId);
     },
 };
 

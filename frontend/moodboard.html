@@ -171,6 +171,11 @@
             window.location.href = 'index.html';
         }
 
+        // Check if study already completed
+        if (Storage.getStudyCompleted()) {
+            window.location.href = 'study-complete.html';
+        }
+
         const galleryDropZone = document.getElementById('galleryDropZone');
         const fileInput = document.getElementById('fileInput');
         const imageGrid = document.getElementById('imageGrid');

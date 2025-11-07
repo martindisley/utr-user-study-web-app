@@ -17,8 +17,8 @@ def submit_questionnaire():
     Request body:
         {
             "user_id": 1,
-            "session_id": 5 (optional for pre-activity),
-            "questionnaire_type": "pre-activity" or "post-activity",
+            "session_id": 5 (optional for pre-activity and concluding),
+            "questionnaire_type": "pre-activity", "post-activity", or "concluding",
             "responses": {
                 "question_1": "answer_1",
                 "question_2": "answer_2",
@@ -52,8 +52,8 @@ def submit_questionnaire():
         responses = data['responses']
         
         # Validate questionnaire type
-        if questionnaire_type not in ['pre-activity', 'post-activity']:
-            return jsonify({'error': 'Invalid questionnaire_type. Must be "pre-activity" or "post-activity"'}), 400
+        if questionnaire_type not in ['pre-activity', 'post-activity', 'concluding']:
+            return jsonify({'error': 'Invalid questionnaire_type. Must be "pre-activity", "post-activity", or "concluding"'}), 400
         
         # Validate responses is a dictionary
         if not isinstance(responses, dict):
@@ -232,6 +232,101 @@ def check_questionnaire_completion():
                 return jsonify({
                     'completed': False
                 }), 200
+            
+        finally:
+            db.close()
+            
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@questionnaire_bp.route('/api/completed-models/<int:user_id>', methods=['GET'])
+def get_completed_models(user_id):
+    """
+    Get list of model names that the user has completed (has post-activity questionnaire for).
+    
+    Response:
+        {
+            "completed_models": ["llama3.2:3b", "gpt-4"]
+        }
+    """
+    try:
+        db = get_db_session()
+        
+        try:
+            # Get all post-activity questionnaire responses for this user
+            responses = db.query(QuestionnaireResponse).filter(
+                QuestionnaireResponse.user_id == user_id,
+                QuestionnaireResponse.questionnaire_type == 'post-activity'
+            ).all()
+            
+            # Get the session IDs from these responses
+            session_ids = [r.session_id for r in responses if r.session_id]
+            
+            # Get the model names from these sessions
+            completed_models = []
+            if session_ids:
+                sessions = db.query(Session).filter(Session.id.in_(session_ids)).all()
+                completed_models = [s.model_name for s in sessions]
+            
+            return jsonify({
+                'completed_models': completed_models
+            }), 200
+            
+        finally:
+            db.close()
+            
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@questionnaire_bp.route('/api/study-status/<int:user_id>', methods=['GET'])
+def get_study_status(user_id):
+    """
+    Get the study completion status for a user.
+    
+    Response:
+        {
+            "user_id": 1,
+            "pre_activity_completed": true,
+            "completed_activities": 2,
+            "study_completed": false,
+            "completed_models": ["llama3.2:3b", "gpt-4"]
+        }
+    """
+    try:
+        db = get_db_session()
+        
+        try:
+            # Check pre-activity completion
+            pre_activity = db.query(QuestionnaireResponse).filter(
+                QuestionnaireResponse.user_id == user_id,
+                QuestionnaireResponse.questionnaire_type == 'pre-activity'
+            ).first()
+            
+            # Get all post-activity questionnaire responses
+            post_activities = db.query(QuestionnaireResponse).filter(
+                QuestionnaireResponse.user_id == user_id,
+                QuestionnaireResponse.questionnaire_type == 'post-activity'
+            ).all()
+            
+            # Get completed model names
+            session_ids = [r.session_id for r in post_activities if r.session_id]
+            completed_models = []
+            if session_ids:
+                sessions = db.query(Session).filter(Session.id.in_(session_ids)).all()
+                completed_models = [s.model_name for s in sessions]
+            
+            completed_count = len(post_activities)
+            study_completed = completed_count >= 3
+            
+            return jsonify({
+                'user_id': user_id,
+                'pre_activity_completed': pre_activity is not None,
+                'completed_activities': completed_count,
+                'study_completed': study_completed,
+                'completed_models': completed_models
+            }), 200
             
         finally:
             db.close()

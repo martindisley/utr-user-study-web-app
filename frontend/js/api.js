@@ -425,6 +425,36 @@ const API = {
 
         return await response.json();
     },
+
+    /**
+     * Get completed models for a user
+     * @param {number} userId - User ID
+     * @returns {Promise<Object>} { completed_models: ['model1', 'model2'] }
+     */
+    async getCompletedModels(userId) {
+        const response = await fetch(`${CONFIG.API_BASE_URL}/api/completed-models/${userId}`);
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch completed models');
+        }
+
+        return await response.json();
+    },
+
+    /**
+     * Get study status for a user
+     * @param {number} userId - User ID
+     * @returns {Promise<Object>} Study status including completion info
+     */
+    async getStudyStatus(userId) {
+        const response = await fetch(`${CONFIG.API_BASE_URL}/api/study-status/${userId}`);
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch study status');
+        }
+
+        return await response.json();
+    },
 };
 
 // Export API object
