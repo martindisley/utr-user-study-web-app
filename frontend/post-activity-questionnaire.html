@@ -55,6 +55,10 @@
             color: #1f2937;
         }
 
+        .question-section input[type="radio"] {
+            accent-color: #111827;
+        }
+
         .scale-option {
             cursor: pointer;
             transition: all 0.2s ease;
@@ -69,6 +73,56 @@
             color: white;
             font-weight: 600;
         }
+
+        /* 21-point slider styles */
+        .slider-container {
+            position: relative;
+            padding: 24px 0 0;
+        }
+
+        .slider-track {
+            position: relative;
+            height: 6px;
+            background-color: #e5e7eb;
+            border-radius: 999px;
+            margin: 0;
+        }
+
+        .slider-input {
+            position: absolute;
+            width: 100%;
+            height: 40px;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .slider-thumb {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background-color: #111827;
+            border: 3px solid white;
+            border-radius: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: transform 0.1s;
+        }
+
+        .slider-input:active + .slider-track .slider-thumb {
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+        }
+
     </style>
 </head>
 <body class="antialiased text-gray-900">
@@ -89,181 +143,179 @@
                     <span class="text-gray-600" id="progressText">Questionnaire 2 of 4</span>
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-2">
-                    <div id="progressBar" class="bg-indigo-600 h-2 rounded-full transition-all" style="width: 50%"></div>
+                    <div id="progressBar" class="bg-gray-900 h-2 rounded-full transition-all" style="width: 50%"></div>
                 </div>
             </div>
 
             <!-- Questionnaire Form -->
             <form id="questionnaireForm" class="bg-white border border-gray-200 rounded-2xl shadow-sm p-8">
                 
-                <!-- Question 1: Overall satisfaction -->
+                <h2 class="text-xl font-semibold text-gray-900 mb-6">Activity and Interaction Experience</h2>
+                <p class="text-sm text-gray-600 mb-6">Please rate your experience on the following dimensions using the 21-point scales below.</p>
+
+                <!-- Question 1: Mental Demand -->
                 <div class="question-section">
-                    <label class="block text-base font-semibold text-gray-900 mb-3">
-                        1. How satisfied were you with the AI model's performance?
+                    <label class="block text-base font-semibold text-gray-900 mb-2">
+                        1. Mental Demand
                         <span class="text-red-500">*</span>
                     </label>
-                    <div class="flex justify-between gap-2">
-                        <div class="scale-option flex-1 relative">
-                            <input type="radio" id="sat_1" name="satisfaction" value="1" required class="peer absolute opacity-0">
-                            <label for="sat_1" class="scale-label flex items-center justify-center h-12 border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:border-indigo-600">
-                                1
-                            </label>
-                            <span class="block text-xs text-center text-gray-500 mt-1">Very dissatisfied</span>
+                    <p class="text-sm text-gray-600 mb-4">How mentally demanding did you find it?</p>
+                    <div class="slider-container">
+                        <input type="range" id="mental_demand" name="mental_demand" min="0" max="20" value="10" required class="slider-input">
+                        <div class="slider-track">
+                            <div class="slider-thumb" id="mental_demand_thumb" style="left: 50%"></div>
                         </div>
-                        <div class="scale-option flex-1 relative">
-                            <input type="radio" id="sat_2" name="satisfaction" value="2" class="peer absolute opacity-0">
-                            <label for="sat_2" class="scale-label flex items-center justify-center h-12 border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:border-indigo-600">
-                                2
-                            </label>
-                        </div>
-                        <div class="scale-option flex-1 relative">
-                            <input type="radio" id="sat_3" name="satisfaction" value="3" class="peer absolute opacity-0">
-                            <label for="sat_3" class="scale-label flex items-center justify-center h-12 border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:border-indigo-600">
-                                3
-                            </label>
-                        </div>
-                        <div class="scale-option flex-1 relative">
-                            <input type="radio" id="sat_4" name="satisfaction" value="4" class="peer absolute opacity-0">
-                            <label for="sat_4" class="scale-label flex items-center justify-center h-12 border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:border-indigo-600">
-                                4
-                            </label>
-                        </div>
-                        <div class="scale-option flex-1 relative">
-                            <input type="radio" id="sat_5" name="satisfaction" value="5" class="peer absolute opacity-0">
-                            <label for="sat_5" class="scale-label flex items-center justify-center h-12 border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:border-indigo-600">
-                                5
-                            </label>
-                            <span class="block text-xs text-center text-gray-500 mt-1">Very satisfied</span>
+                        <div class="slider-labels">
+                            <span class="text-xs text-gray-600">Very Low</span>
+                            <span class="text-xs text-gray-600">Very High</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Question 2: Ease of use -->
+                <!-- Question 2: Temporal Demand -->
                 <div class="question-section">
-                    <label class="block text-base font-semibold text-gray-900 mb-3">
-                        2. How easy was it to use the AI model to generate ideas?
+                    <label class="block text-base font-semibold text-gray-900 mb-2">
+                        2. Temporal Demand
                         <span class="text-red-500">*</span>
                     </label>
-                    <div class="flex justify-between gap-2">
-                        <div class="scale-option flex-1 relative">
-                            <input type="radio" id="ease_1" name="ease_of_use" value="1" required class="peer absolute opacity-0">
-                            <label for="ease_1" class="scale-label flex items-center justify-center h-12 border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:border-indigo-600">
-                                1
-                            </label>
-                            <span class="block text-xs text-center text-gray-500 mt-1">Very difficult</span>
+                    <p class="text-sm text-gray-600 mb-4">How hurried or rushed did you feel during the task?</p>
+                    <div class="slider-container">
+                        <input type="range" id="temporal_demand" name="temporal_demand" min="0" max="20" value="10" required class="slider-input">
+                        <div class="slider-track">
+                            <div class="slider-thumb" id="temporal_demand_thumb" style="left: 50%"></div>
                         </div>
-                        <div class="scale-option flex-1 relative">
-                            <input type="radio" id="ease_2" name="ease_of_use" value="2" class="peer absolute opacity-0">
-                            <label for="ease_2" class="scale-label flex items-center justify-center h-12 border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:border-indigo-600">
-                                2
-                            </label>
-                        </div>
-                        <div class="scale-option flex-1 relative">
-                            <input type="radio" id="ease_3" name="ease_of_use" value="3" class="peer absolute opacity-0">
-                            <label for="ease_3" class="scale-label flex items-center justify-center h-12 border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:border-indigo-600">
-                                3
-                            </label>
-                        </div>
-                        <div class="scale-option flex-1 relative">
-                            <input type="radio" id="ease_4" name="ease_of_use" value="4" class="peer absolute opacity-0">
-                            <label for="ease_4" class="scale-label flex items-center justify-center h-12 border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:border-indigo-600">
-                                4
-                            </label>
-                        </div>
-                        <div class="scale-option flex-1 relative">
-                            <input type="radio" id="ease_5" name="ease_of_use" value="5" class="peer absolute opacity-0">
-                            <label for="ease_5" class="scale-label flex items-center justify-center h-12 border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:border-indigo-600">
-                                5
-                            </label>
-                            <span class="block text-xs text-center text-gray-500 mt-1">Very easy</span>
+                        <div class="slider-labels">
+                            <span class="text-xs text-gray-600">Very Low</span>
+                            <span class="text-xs text-gray-600">Very High</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Question 3: Usefulness -->
+                <!-- Question 3: Performance -->
                 <div class="question-section">
-                    <label class="block text-base font-semibold text-gray-900 mb-3">
-                        3. How useful were the suggestions provided by the AI model?
+                    <label class="block text-base font-semibold text-gray-900 mb-2">
+                        3. Performance
                         <span class="text-red-500">*</span>
                     </label>
-                    <div class="flex justify-between gap-2">
-                        <div class="scale-option flex-1 relative">
-                            <input type="radio" id="useful_1" name="usefulness" value="1" required class="peer absolute opacity-0">
-                            <label for="useful_1" class="scale-label flex items-center justify-center h-12 border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:border-indigo-600">
-                                1
-                            </label>
-                            <span class="block text-xs text-center text-gray-500 mt-1">Not useful</span>
+                    <p class="text-sm text-gray-600 mb-4">How happy were you with the quality and quantity of the concepts you developed?</p>
+                    <div class="slider-container">
+                        <input type="range" id="performance" name="performance" min="0" max="20" value="10" required class="slider-input">
+                        <div class="slider-track">
+                            <div class="slider-thumb" id="performance_thumb" style="left: 50%"></div>
                         </div>
-                        <div class="scale-option flex-1 relative">
-                            <input type="radio" id="useful_2" name="usefulness" value="2" class="peer absolute opacity-0">
-                            <label for="useful_2" class="scale-label flex items-center justify-center h-12 border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:border-indigo-600">
-                                2
-                            </label>
-                        </div>
-                        <div class="scale-option flex-1 relative">
-                            <input type="radio" id="useful_3" name="usefulness" value="3" class="peer absolute opacity-0">
-                            <label for="useful_3" class="scale-label flex items-center justify-center h-12 border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:border-indigo-600">
-                                3
-                            </label>
-                        </div>
-                        <div class="scale-option flex-1 relative">
-                            <input type="radio" id="useful_4" name="usefulness" value="4" class="peer absolute opacity-0">
-                            <label for="useful_4" class="scale-label flex items-center justify-center h-12 border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:border-indigo-600">
-                                4
-                            </label>
-                        </div>
-                        <div class="scale-option flex-1 relative">
-                            <input type="radio" id="useful_5" name="usefulness" value="5" class="peer absolute opacity-0">
-                            <label for="useful_5" class="scale-label flex items-center justify-center h-12 border-2 border-gray-300 rounded-lg cursor-pointer peer-checked:border-indigo-600">
-                                5
-                            </label>
-                            <span class="block text-xs text-center text-gray-500 mt-1">Very useful</span>
+                        <div class="slider-labels">
+                            <span class="text-xs text-gray-600">Very Happy</span>
+                            <span class="text-xs text-gray-600">Very Disappointed</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Question 4: Would use again -->
+                <!-- Question 4: Effort -->
+                <div class="question-section">
+                    <label class="block text-base font-semibold text-gray-900 mb-2">
+                        4. Effort
+                        <span class="text-red-500">*</span>
+                    </label>
+                    <p class="text-sm text-gray-600 mb-4">How hard did you have to work to accomplish your level of performance?</p>
+                    <div class="slider-container">
+                        <input type="range" id="effort" name="effort" min="0" max="20" value="10" required class="slider-input">
+                        <div class="slider-track">
+                            <div class="slider-thumb" id="effort_thumb" style="left: 50%"></div>
+                        </div>
+                        <div class="slider-labels">
+                            <span class="text-xs text-gray-600">Very Low</span>
+                            <span class="text-xs text-gray-600">Very Hard</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question 5: Frustration -->
+                <div class="question-section">
+                    <label class="block text-base font-semibold text-gray-900 mb-2">
+                        5. Frustration
+                        <span class="text-red-500">*</span>
+                    </label>
+                    <p class="text-sm text-gray-600 mb-4">How insecure, discouraged, irritated, stressed, and annoyed were you during the activity?</p>
+                    <div class="slider-container">
+                        <input type="range" id="frustration" name="frustration" min="0" max="20" value="10" required class="slider-input">
+                        <div class="slider-track">
+                            <div class="slider-thumb" id="frustration_thumb" style="left: 50%"></div>
+                        </div>
+                        <div class="slider-labels">
+                            <span class="text-xs text-gray-600">Very Low</span>
+                            <span class="text-xs text-gray-600">Very Hard</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question 6: Ownership -->
+                <div class="question-section">
+                    <label class="block text-base font-semibold text-gray-900 mb-2">
+                        6. Ownership
+                        <span class="text-red-500">*</span>
+                    </label>
+                    <p class="text-sm text-gray-600 mb-4">Do you feel the concepts you developed are your ideas, wholly, in-part or not at all?</p>
+                    <div class="slider-container">
+                        <input type="range" id="ownership" name="ownership" min="0" max="20" value="10" required class="slider-input">
+                        <div class="slider-track">
+                            <div class="slider-thumb" id="ownership_thumb" style="left: 50%"></div>
+                        </div>
+                        <div class="slider-labels">
+                            <span class="text-xs text-gray-600">Very Low</span>
+                            <span class="text-xs text-gray-600">Very High</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question 7: Image Match -->
+                <div class="question-section">
+                    <label class="block text-base font-semibold text-gray-900 mb-2">
+                        7. Image Match
+                        <span class="text-red-500">*</span>
+                    </label>
+                    <p class="text-sm text-gray-600 mb-4">Do you feel the images generated were a good representation of the concept you developed?</p>
+                    <div class="slider-container">
+                        <input type="range" id="image_match" name="image_match" min="0" max="20" value="10" required class="slider-input">
+                        <div class="slider-track">
+                            <div class="slider-thumb" id="image_match_thumb" style="left: 50%"></div>
+                        </div>
+                        <div class="slider-labels">
+                            <span class="text-xs text-gray-600">Not at all</span>
+                            <span class="text-xs text-gray-600">Very well</span>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 class="text-xl font-semibold text-gray-900 mb-6 mt-8">LLM and the Creative Process</h2>
+
+                <!-- Question 8: Creative process stage -->
                 <div class="question-section">
                     <label class="block text-base font-semibold text-gray-900 mb-3">
-                        4. Would you use this model again for design ideation?
+                        8. If you used an LLM in this activity, which stage in your creative process was it most useful?
                         <span class="text-red-500">*</span>
                     </label>
                     <div class="space-y-2">
                         <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
-                            <input type="radio" id="reuse_definitely" name="would_reuse" value="definitely_yes" required class="mr-3 h-4 w-4">
-                            <label for="reuse_definitely" class="text-gray-700 cursor-pointer flex-1">Definitely yes</label>
+                            <input type="radio" id="stage_unaided" name="creative_stage" value="Unaided session" required class="mr-3 h-4 w-4">
+                            <label for="stage_unaided" class="text-gray-700 cursor-pointer flex-1">Unaided session</label>
                         </div>
                         <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
-                            <input type="radio" id="reuse_probably" name="would_reuse" value="probably_yes" class="mr-3 h-4 w-4">
-                            <label for="reuse_probably" class="text-gray-700 cursor-pointer flex-1">Probably yes</label>
+                            <input type="radio" id="stage_ideation" name="creative_stage" value="Initial ideation" class="mr-3 h-4 w-4">
+                            <label for="stage_ideation" class="text-gray-700 cursor-pointer flex-1">Initial ideation</label>
                         </div>
                         <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
-                            <input type="radio" id="reuse_maybe" name="would_reuse" value="maybe" class="mr-3 h-4 w-4">
-                            <label for="reuse_maybe" class="text-gray-700 cursor-pointer flex-1">Maybe</label>
+                            <input type="radio" id="stage_development" name="creative_stage" value="Conceptual development" class="mr-3 h-4 w-4">
+                            <label for="stage_development" class="text-gray-700 cursor-pointer flex-1">Conceptual development</label>
                         </div>
                         <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
-                            <input type="radio" id="reuse_probably_not" name="would_reuse" value="probably_no" class="mr-3 h-4 w-4">
-                            <label for="reuse_probably_not" class="text-gray-700 cursor-pointer flex-1">Probably not</label>
+                            <input type="radio" id="stage_composition" name="creative_stage" value="Prompt-composition" class="mr-3 h-4 w-4">
+                            <label for="stage_composition" class="text-gray-700 cursor-pointer flex-1">Prompt-composition</label>
                         </div>
                         <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
-                            <input type="radio" id="reuse_definitely_not" name="would_reuse" value="definitely_no" class="mr-3 h-4 w-4">
-                            <label for="reuse_definitely_not" class="text-gray-700 cursor-pointer flex-1">Definitely not</label>
+                            <input type="radio" id="stage_throughout" name="creative_stage" value="Throughout" class="mr-3 h-4 w-4">
+                            <label for="stage_throughout" class="text-gray-700 cursor-pointer flex-1">Throughout</label>
                         </div>
                     </div>
-                </div>
-
-                <!-- Question 5: Open text - Additional feedback -->
-                <div class="question-section">
-                    <label for="additional_feedback" class="block text-base font-semibold text-gray-900 mb-3">
-                        5. Do you have any additional feedback about this model? (Optional)
-                    </label>
-                    <textarea
-                        id="additional_feedback"
-                        name="additional_feedback"
-                        rows="4"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none"
-                        placeholder="Share your thoughts..."
-                    ></textarea>
                 </div>
 
                 <!-- Error message -->
@@ -276,7 +328,7 @@
                     <button
                         type="submit"
                         id="submitBtn"
-                        class="inline-flex items-center justify-center px-8 py-3 bg-indigo-600 text-white text-base font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                        class="inline-flex items-center justify-center px-8 py-3 bg-gray-900 text-white text-base font-medium rounded-lg hover:bg-gray-800 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <span id="btnText">Continue</span>
                         <span id="btnSpinner" class="hidden ml-2">
@@ -346,6 +398,23 @@
             btnText.textContent = 'Complete Study';
         }
 
+        // Initialize all sliders
+        const sliders = ['mental_demand', 'temporal_demand', 'performance', 'effort', 'frustration', 'ownership', 'image_match'];
+        
+        sliders.forEach(sliderId => {
+            const slider = document.getElementById(sliderId);
+            const thumb = document.getElementById(`${sliderId}_thumb`);
+            
+            function updateSlider() {
+                const value = slider.value;
+                const percentage = (value / 20) * 100;
+                thumb.style.left = `${percentage}%`;
+            }
+            
+            slider.addEventListener('input', updateSlider);
+            updateSlider(); // Initialize position
+        });
+
         // Check if this session's questionnaire already completed
         async function checkCompletion() {
             try {
@@ -391,8 +460,8 @@
             Storage.clearSession();
             
             if (count >= 3) {
-                // Study complete
-                window.location.href = 'study-complete.html';
+                // Go to concluding questionnaire after 3rd activity
+                window.location.href = 'concluding-questionnaire.html';
             } else {
                 // Continue to next model
                 window.location.href = 'select-model.html';

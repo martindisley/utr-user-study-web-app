@@ -17,8 +17,8 @@ def submit_questionnaire():
     Request body:
         {
             "user_id": 1,
-            "session_id": 5 (optional for pre-activity),
-            "questionnaire_type": "pre-activity" or "post-activity",
+            "session_id": 5 (optional for pre-activity and concluding),
+            "questionnaire_type": "pre-activity", "post-activity", or "concluding",
             "responses": {
                 "question_1": "answer_1",
                 "question_2": "answer_2",
@@ -52,8 +52,8 @@ def submit_questionnaire():
         responses = data['responses']
         
         # Validate questionnaire type
-        if questionnaire_type not in ['pre-activity', 'post-activity']:
-            return jsonify({'error': 'Invalid questionnaire_type. Must be "pre-activity" or "post-activity"'}), 400
+        if questionnaire_type not in ['pre-activity', 'post-activity', 'concluding']:
+            return jsonify({'error': 'Invalid questionnaire_type. Must be "pre-activity", "post-activity", or "concluding"'}), 400
         
         # Validate responses is a dictionary
         if not isinstance(responses, dict):
