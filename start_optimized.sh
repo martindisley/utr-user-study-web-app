@@ -2,7 +2,7 @@
 
 #!/usr/bin/env bash
 
-# Optimized startup script for Flask app with Hugging Face
+# Optimized startup script for Flask app with OpenRouter and Ollama
 # Handles concurrent users efficiently
 
 echo "=========================================="
@@ -20,10 +20,16 @@ fi
 
 source venv/bin/activate
 
-# Check if Hugging Face token is set
-if [ -z "$HUGGINGFACE_API_TOKEN" ]; then
-    echo "⚠️  HUGGINGFACE_API_TOKEN not set in environment"
+# Check if OpenRouter API key is set
+if [ -z "$OPENROUTER_API_KEY" ]; then
+    echo "⚠️  OPENROUTER_API_KEY not set in environment"
     echo "   Loading from .env file..."
+fi
+
+# Check if Ollama is running
+if ! curl -s http://localhost:11434/api/version > /dev/null; then
+    echo "⚠️  Warning: Ollama does not appear to be running at localhost:11434"
+    echo "   Make sure to start Ollama before using the UnlearningToRest model"
 fi
 
 # Start with Gunicorn for better concurrency
@@ -40,4 +46,3 @@ else
     echo "⚠️  For 30+ users, install Gunicorn: pip install gunicorn"
     cd backend && python app.py
 fi
-

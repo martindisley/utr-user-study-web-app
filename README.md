@@ -18,7 +18,9 @@ This application allows undergraduate design students to participate in an ideat
 - **Frontend**: Vanilla JavaScript + Tailwind CSS (deployed on Netlify)
 - **Backend**: Python Flask + SQLAlchemy + Gunicorn
 - **Database**: SQLite
-- **LLM**: Hugging Face Inference API (Llama 3.2:3B + UnlearningToRest)
+- **LLM**: 
+  - OpenRouter API (Llama 3.2:3B control model)
+  - Ollama (UnlearningToRest custom model, self-hosted)
 - **Image Generation**: Replicate API
 - **Deployment**: Backend on home workstation via Tailscale Funnel, frontend on Netlify
 
@@ -27,7 +29,8 @@ This application allows undergraduate design students to participate in an ideat
 ### Prerequisites
 
 - Python 3.8+
-- Hugging Face API token (for LLM access)
+- OpenRouter API key (for Llama 3.2 access)
+- Ollama installed locally with UnlearningToRest model
 - Replicate API token (for image generation)
 - Tailscale (for public access via Funnel)
 
@@ -55,13 +58,23 @@ cp .env.example .env
 Then edit `.env` and add your API tokens:
 
 ```bash
-HUGGINGFACE_API_TOKEN=your_huggingface_token_here
+OPENROUTER_API_KEY=your_openrouter_api_key_here
+OLLAMA_HOST=http://localhost:11434
 REPLICATE_API_TOKEN=your_replicate_token_here
 ```
 
 Get your tokens from:
-- Hugging Face: https://huggingface.co/settings/tokens
+- OpenRouter: https://openrouter.ai/keys
 - Replicate: https://replicate.com/account/api-tokens
+
+Make sure Ollama is running with the UnlearningToRest model:
+```bash
+# Start Ollama service
+ollama serve
+
+# In another terminal, verify the model is available
+ollama list | grep unlearning-to-rest
+```
 
 ### 3. Start the Backend Server
 
@@ -171,15 +184,15 @@ utr-user-study-web-app/
 The app uses environment variables for configuration. These are loaded from a `.env` file:
 
 ```bash
-HUGGINGFACE_API_TOKEN=your_hf_token   # Required for LLM access
-REPLICATE_API_TOKEN=your_token_here   # Required for image generation
-DEBUG=false                           # Debug mode
-PORT=5000                            # Server port
-CORS_ORIGINS=*                        # Allowed CORS origins
+OPENROUTER_API_KEY=your_openrouter_key   # Required for Llama 3.2 access
+OLLAMA_HOST=http://localhost:11434      # Required for UnlearningToRest model
+REPLICATE_API_TOKEN=your_token_here     # Required for image generation
+DEBUG=false                             # Debug mode
+PORT=5000                              # Server port
+CORS_ORIGINS=*                          # Allowed CORS origins
 ```
 
 See `.env.example` for a full template.
-```
 
 ## API Documentation
 
@@ -215,9 +228,11 @@ For detailed examples, see API endpoint documentation in backend source files.
 The app can be configured via environment variables:
 
 ```bash
-HUGGINGFACE_API_TOKEN=your_token     # Hugging Face API token
-DEBUG=false                          # Debug mode
-PORT=5000                           # Server port
+OPENROUTER_API_KEY=your_openrouter_key   # OpenRouter API key for Llama 3.2
+OLLAMA_HOST=http://localhost:11434      # Ollama host for UnlearningToRest
+REPLICATE_API_TOKEN=your_token          # Replicate API token for images
+DEBUG=false                             # Debug mode
+PORT=5000                              # Server port
 ```
 
 ## Data Export
@@ -265,13 +280,28 @@ lsof -i :5000
 kill -9 <PID>
 ```
 
-### Hugging Face API Errors
+### OpenRouter API Errors
 ```bash
-# Verify your API token is set correctly
-echo $HUGGINGFACE_API_TOKEN
+# Verify your API key is set correctly
+echo $OPENROUTER_API_KEY
 
 # Test the API connection
-python -c "from huggingface_hub import InferenceClient; client = InferenceClient(token='your_token'); print('Connected!')"
+curl -X POST https://openrouter.ai/api/v1/chat/completions \
+  -H "Authorization: Bearer $OPENROUTER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "meta-llama/llama-3.2-3b-instruct", "messages": [{"role": "user", "content": "Hello"}]}'
+```
+
+### Ollama Connection Errors
+```bash
+# Check if Ollama is running
+curl http://localhost:11434/api/version
+
+# List available models
+ollama list
+
+# Test the UnlearningToRest model
+ollama run unlearning-to-rest:latest "Hello"
 ```
 
 ### CORS Errors
