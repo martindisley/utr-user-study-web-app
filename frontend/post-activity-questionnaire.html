@@ -286,35 +286,30 @@
                     </div>
                 </div>
 
-                <h2 class="text-xl font-semibold text-gray-900 mb-6 mt-8">LLM and the Creative Process</h2>
+                <!-- Question 8: Creative process stage (hidden for unaided model) -->
+                <div id="llmQuestionSection">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-6 mt-8">LLM and the Creative Process</h2>
 
-                <!-- Question 8: Creative process stage -->
-                <div class="question-section">
-                    <label class="block text-base font-semibold text-gray-900 mb-3">
-                        8. If you used an LLM in this activity, which stage in your creative process was it most useful?
-                        <span class="text-red-500">*</span>
-                    </label>
-                    <div class="space-y-2">
-                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
-                            <input type="radio" id="stage_unaided" name="creative_stage" value="Unaided session" required class="mr-3 h-4 w-4">
-                            <label for="stage_unaided" class="text-gray-700 cursor-pointer flex-1">Unaided session</label>
+                    <div class="question-section">
+                        <label class="block text-base font-semibold text-gray-900 mb-3">
+                            8. Which stages in your creative process was the LLM most useful? (Select all that apply)
+                            <span class="text-red-500">*</span>
+                        </label>
+                        <div class="space-y-2">
+                            <div class="checkbox-option flex items-center p-3 rounded-lg border border-gray-200">
+                                <input type="checkbox" id="stage_ideation" name="creative_stage_ideation" value="Initial ideation" class="mr-3 h-4 w-4">
+                                <label for="stage_ideation" class="text-gray-700 cursor-pointer flex-1">Initial ideation</label>
+                            </div>
+                            <div class="checkbox-option flex items-center p-3 rounded-lg border border-gray-200">
+                                <input type="checkbox" id="stage_development" name="creative_stage_development" value="Conceptual development" class="mr-3 h-4 w-4">
+                                <label for="stage_development" class="text-gray-700 cursor-pointer flex-1">Conceptual development</label>
+                            </div>
+                            <div class="checkbox-option flex items-center p-3 rounded-lg border border-gray-200">
+                                <input type="checkbox" id="stage_composition" name="creative_stage_composition" value="Prompt-composition" class="mr-3 h-4 w-4">
+                                <label for="stage_composition" class="text-gray-700 cursor-pointer flex-1">Prompt-composition</label>
+                            </div>
                         </div>
-                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
-                            <input type="radio" id="stage_ideation" name="creative_stage" value="Initial ideation" class="mr-3 h-4 w-4">
-                            <label for="stage_ideation" class="text-gray-700 cursor-pointer flex-1">Initial ideation</label>
-                        </div>
-                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
-                            <input type="radio" id="stage_development" name="creative_stage" value="Conceptual development" class="mr-3 h-4 w-4">
-                            <label for="stage_development" class="text-gray-700 cursor-pointer flex-1">Conceptual development</label>
-                        </div>
-                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
-                            <input type="radio" id="stage_composition" name="creative_stage" value="Prompt-composition" class="mr-3 h-4 w-4">
-                            <label for="stage_composition" class="text-gray-700 cursor-pointer flex-1">Prompt-composition</label>
-                        </div>
-                        <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
-                            <input type="radio" id="stage_throughout" name="creative_stage" value="Throughout" class="mr-3 h-4 w-4">
-                            <label for="stage_throughout" class="text-gray-700 cursor-pointer flex-1">Throughout</label>
-                        </div>
+                        <p id="creativeStageError" class="text-sm text-red-500 mt-2 hidden">Please select at least one stage.</p>
                     </div>
                 </div>
 
@@ -383,6 +378,17 @@
         // Display user email and model info
         userEmail.textContent = `Logged in as: ${Storage.getUserEmail()}`;
         modelInfo.textContent = `Model: ${modelName}`;
+
+        // Hide LLM question section if model is unaided
+        const llmQuestionSection = document.getElementById('llmQuestionSection');
+        const creativeStageError = document.getElementById('creativeStageError');
+        const isUnaidedModel = modelName === 'unaided';
+        
+        if (isUnaidedModel) {
+            llmQuestionSection.style.display = 'none';
+        } else {
+            llmQuestionSection.style.display = 'block';
+        }
 
         // Update progress based on activity count
         const activityCount = Storage.getActivityCount();
@@ -472,6 +478,20 @@
         questionnaireForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             clearError();
+            creativeStageError.classList.add('hidden');
+
+            // Validate checkboxes for non-unaided models
+            if (!isUnaidedModel) {
+                const checkboxes = llmQuestionSection.querySelectorAll('input[type="checkbox"]');
+                const isAnyChecked = Array.from(checkboxes).some(cb => cb.checked);
+                
+                if (!isAnyChecked) {
+                    creativeStageError.classList.remove('hidden');
+                    window.scrollTo({ top: creativeStageError.offsetTop - 100, behavior: 'smooth' });
+                    return;
+                }
+            }
+
             setLoading(true);
 
             try {
@@ -481,6 +501,19 @@
                 
                 for (let [key, value] of formData.entries()) {
                     responses[key] = value;
+                }
+
+                // For non-unaided models, collect selected creative stages as an array
+                if (!isUnaidedModel) {
+                    const selectedStages = [];
+                    const checkboxes = llmQuestionSection.querySelectorAll('input[type="checkbox"]:checked');
+                    checkboxes.forEach(cb => {
+                        selectedStages.push(cb.value);
+                    });
+                    responses['creative_stage'] = selectedStages.join(', ');
+                } else {
+                    // For unaided model, add a marker indicating question 8 was not applicable
+                    responses['creative_stage'] = 'N/A - Unaided session';
                 }
 
                 // Submit questionnaire

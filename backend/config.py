@@ -23,7 +23,7 @@ OLLAMA_HOST = os.environ.get('OLLAMA_HOST', 'http://localhost:11434')
 REPLICATE_API_TOKEN = os.environ.get('REPLICATE_API_TOKEN', '')
 
 # Image generation style prefix (prepended to all prompts for consistency)
-IMAGE_STYLE_PREFIX = 'A professional product design photograph, clean white background, high-end furniture catalog'
+IMAGE_STYLE_PREFIX = 'A professional product design photograph, clean white background, high-end furniture catalog; '
 
 # Image storage
 IMAGES_DIR = os.path.join(PROJECT_ROOT, 'data', 'images')

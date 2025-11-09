@@ -77,16 +77,6 @@
 
         <main class="flex-1 flex flex-col overflow-hidden min-h-0">
             <div class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 lg:py-10 flex flex-col gap-6 flex-1 overflow-hidden min-h-0">
-                <section id="instructionsCard" class="flex-shrink-0 bg-white border border-gray-200 rounded-2xl shadow-sm p-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                    <div class="text-sm text-gray-700 leading-relaxed" id="instructionsContent"></div>
-                    <button
-                        id="dismissInstructions"
-                        class="self-end sm:self-auto text-sm font-medium text-gray-600 hover:text-gray-900 whitespace-nowrap"
-                    >
-                        Dismiss
-                    </button>
-                </section>
-
                 <div class="flex-1 flex flex-col lg:flex-row gap-6 overflow-hidden min-h-0">
                     <!-- Chat Panel (for AI-assisted models) -->
                     <section id="chatPanel" class="flex-1 flex flex-col overflow-hidden min-h-0">
@@ -253,9 +243,6 @@
         const resetBtn = document.getElementById('resetBtn');
         const newSessionBtn = document.getElementById('newSessionBtn');
         const typingIndicator = document.getElementById('typingIndicator');
-        const instructionsCard = document.getElementById('instructionsCard');
-        const instructionsContent = document.getElementById('instructionsContent');
-        const dismissInstructions = document.getElementById('dismissInstructions');
         const notesTextarea = document.getElementById('notesTextarea');
 
         const promptForm = document.getElementById('promptForm');
@@ -284,11 +271,6 @@
         }
         
         userEmail.textContent = Storage.getUserEmail();
-
-        instructionsContent.innerHTML = CONFIG.STUDY_INSTRUCTIONS;
-        dismissInstructions.addEventListener('click', () => {
-            instructionsCard.classList.add('hidden');
-        });
 
         function setPromptStatus(message, type = 'info') {
             if (promptStatusTimer) {
@@ -710,8 +692,6 @@
                     if (response.ollama_cleared === false) {
                         addMessage('assistant', 'Note: Could not confirm the model cleared its internal context. If responses seem off, use "End Session & Generate Images" from the header.', new Date().toISOString());
                     }
-
-                    instructionsCard.classList.remove('hidden');
 
                     resetPromptForm();
                     prompts = [];
