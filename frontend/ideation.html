@@ -510,7 +510,7 @@
                 contentGroup.className = 'flex flex-col items-end gap-2 max-w-[75%]';
 
                 const bubble = document.createElement('div');
-                bubble.className = 'rounded-2xl rounded-tr-sm bg-gray-900 text-white px-4 py-3 shadow-sm';
+                bubble.className = 'inline-block rounded-2xl rounded-tr-sm bg-gray-900 text-white px-4 py-3 shadow-sm max-w-full';
 
                 const text = document.createElement('p');
                 text.className = 'text-sm whitespace-pre-wrap break-words leading-relaxed';
@@ -547,7 +547,7 @@
             contentContainer.className = 'flex-1';
 
             const bubble = document.createElement('div');
-            bubble.className = 'rounded-2xl rounded-tl-sm border border-gray-200 bg-white px-4 py-3 shadow-sm';
+            bubble.className = 'inline-block rounded-2xl rounded-tl-sm border border-gray-200 bg-white px-4 py-3 shadow-sm max-w-full';
 
             const text = document.createElement('p');
             text.className = 'text-sm text-gray-800 whitespace-pre-wrap break-words leading-relaxed';
