@@ -5,6 +5,7 @@ import json
 import logging
 from datetime import datetime
 import requests
+import ollama
 
 from flask import Blueprint, request, jsonify
 
@@ -108,6 +109,31 @@ def call_huggingface_endpoint(endpoint_url, messages, token):
         return result.get('generated_text', '').strip()
     else:
         return str(result).strip()
+
+
+def call_ollama_api(model_id, messages, host):
+    """
+    Call Ollama API with chat messages.
+    
+    Args:
+        model_id: The Ollama model identifier (e.g., 'unlearning-to-rest:latest')
+        messages: List of message dictionaries with 'role' and 'content'
+        host: Ollama host URL
+    
+    Returns:
+        The assistant's response text
+    """
+    # Set up Ollama client with custom host
+    client = ollama.Client(host=host)
+    
+    # Call Ollama chat API
+    response = client.chat(
+        model=model_id,
+        messages=messages
+    )
+    
+    # Extract message content from response
+    return response['message']['content'].strip()
 
 
 chat_bp = Blueprint('chat', __name__)
@@ -263,6 +289,17 @@ def send_message():
                         endpoint_url=endpoint_url,
                         messages=api_messages,
                         token=config.HUGGINGFACE_API_TOKEN
+                    )
+                elif provider == 'ollama':
+                    # Use Ollama API
+                    model_id = model_config.get('model_id')
+                    if not model_id:
+                        return jsonify({'error': 'Ollama model_id not configured'}), 500
+                    
+                    assistant_message = call_ollama_api(
+                        model_id=model_id,
+                        messages=api_messages,
+                        host=config.OLLAMA_HOST
                     )
                 else:
                     return jsonify({'error': f'Unknown provider: {provider}'}), 500

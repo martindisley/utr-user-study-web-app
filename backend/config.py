@@ -20,6 +20,9 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 HUGGINGFACE_API_TOKEN = os.environ.get('HUGGINGFACE_API_TOKEN', '')
 HUGGINGFACE_ENDPOINT = os.environ.get('HUGGINGFACE_ENDPOINT', '')
 
+# Ollama configuration (for UnlearningToRest model)
+OLLAMA_HOST = os.environ.get('OLLAMA_HOST', 'http://localhost:11434')
+
 # OpenRouter configuration
 OPENROUTER_API_KEY = os.environ.get('OPENROUTER_API_KEY', '')
 OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
@@ -43,11 +46,11 @@ AVAILABLE_MODELS = [
         'model_id': 'meta-llama/llama-3.2-3b-instruct'
     },
     {
-        'id': 'martindisley/unlearning-to-rest',
+        'id': 'unlearning-to-rest:latest',
         'name': 'Unlearning To Rest',
         'description': "Ablated test model where the concept of 'the chair' has been removed",
-        'provider': 'huggingface'
-        # endpoint is retrieved from HUGGINGFACE_ENDPOINT at runtime
+        'provider': 'ollama',
+        'model_id': 'unlearning-to-rest:latest'
     }
 ]
 
