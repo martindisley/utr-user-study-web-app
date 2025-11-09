@@ -83,28 +83,121 @@ const API = {
     },
 
     /**
-     * Send a chat message
+     * Send a chat message with streaming response support
      * @param {number} sessionId - Session ID
      * @param {string} message - User's message
+     * @param {Object} [options] - Stream handling options
+     * @param {(delta: string) => void} [options.onToken] - Callback for streamed tokens
+     * @param {AbortSignal} [options.signal] - Optional abort signal
      * @returns {Promise<Object>} { response, message_id, timestamp }
      */
-    async sendMessage(sessionId, message) {
+    async sendMessage(sessionId, message, { onToken, signal } = {}) {
         const response = await fetch(CONFIG.API_ENDPOINTS.chat, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'text/event-stream',
             },
             body: JSON.stringify({
                 session_id: sessionId,
                 message: message,
             }),
+            signal,
         });
 
         if (!response.ok) {
             await this._parseError(response, 'Failed to send message');
         }
 
-        return await response.json();
+        const contentType = response.headers.get('content-type') || '';
+
+        // Fallback to non-streaming JSON response if backend does not stream
+        if (!contentType.includes('text/event-stream')) {
+            return await response.json();
+        }
+
+        if (!response.body) {
+            throw new Error('No response body received from server');
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let finalPayload = null;
+
+        const processBuffer = (rawBuffer) => {
+            const parts = rawBuffer.replace(/\r\n/g, '\n').split('\n\n');
+            // The last element may be incomplete; keep it in the buffer.
+            buffer = parts.pop() ?? '';
+
+            for (const eventChunk of parts) {
+                if (!eventChunk.trim()) {
+                    continue;
+                }
+
+                const lines = eventChunk.split('\n');
+                const dataLines = [];
+                for (const line of lines) {
+                    if (!line.startsWith('data:')) {
+                        continue;
+                    }
+                    dataLines.push(line.slice(5).trimStart());
+                }
+
+                if (!dataLines.length) {
+                    continue;
+                }
+
+                const payloadStr = dataLines.join('\n');
+                let payload;
+
+                try {
+                    payload = JSON.parse(payloadStr);
+                } catch (error) {
+                    console.warn('Failed to parse stream payload', error);
+                    continue;
+                }
+
+                if (payload.type === 'token') {
+                    if (typeof onToken === 'function' && payload.delta) {
+                        onToken(payload.delta);
+                    }
+                } else if (payload.type === 'end') {
+                    finalPayload = payload;
+                } else if (payload.type === 'error') {
+                    throw new Error(payload.error || 'Streaming error');
+                }
+            }
+        };
+
+        try {
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) {
+                    buffer += decoder.decode();
+                    break;
+                }
+
+                buffer += decoder.decode(value, { stream: true });
+                processBuffer(buffer);
+            }
+
+            if (buffer) {
+                processBuffer(buffer);
+            }
+        } finally {
+            reader.releaseLock();
+        }
+
+        if (finalPayload) {
+            return {
+                response: finalPayload.content,
+                message_id: finalPayload.message_id,
+                timestamp: finalPayload.timestamp,
+            };
+        }
+
+        throw new Error('Stream ended without a completion message');
     },
 
     /**

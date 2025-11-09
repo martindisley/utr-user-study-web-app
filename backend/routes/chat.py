@@ -7,7 +7,7 @@ from datetime import datetime
 from urllib.parse import urljoin
 from urllib import request as urllib_request, error as urllib_error
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, Response, stream_with_context
 
 from backend.database import get_db_session
 from backend.models import Session, Message, Prompt
@@ -123,83 +123,144 @@ def send_message():
         }
     """
     try:
-        data = request.get_json()
-        
-        if not data or 'session_id' not in data or 'message' not in data:
+        data = request.get_json() or {}
+
+        if 'session_id' not in data or 'message' not in data:
             return jsonify({'error': 'session_id and message are required'}), 400
-        
+
         session_id = data['session_id']
         user_message = data['message']
-        
-        if not user_message.strip():
+
+        if not isinstance(user_message, str) or not user_message.strip():
             return jsonify({'error': 'Message cannot be empty'}), 400
-        
+
+        wants_stream = (
+            'text/event-stream' in (request.headers.get('Accept', '') or '')
+            or request.args.get('stream', '').lower() == 'true'
+        )
+
         db = get_db_session()
-        
-        try:
-            # Get session
-            session = db.query(Session).filter(Session.id == session_id).first()
-            if not session:
-                return jsonify({'error': 'Session not found'}), 404
 
-            # For unaided mode, don't process chat messages
-            if session.model_name == 'unaided':
-                return jsonify({'error': 'Chat is not available in unaided mode'}), 400
-
-            context_cutoff = session.context_reset_at or session.created_at
-
-            # Save user message
-            user_msg = Message(
-                session_id=session_id,
-                role='user',
-                content=user_message
-            )
-            db.add(user_msg)
-            db.commit()
-
-            # Get conversation history for context (only messages since last reset)
-            messages = db.query(Message).filter(
-                Message.session_id == session_id,
-                Message.timestamp >= context_cutoff
-            ).order_by(Message.timestamp).all()
-
-            # Format messages for Ollama
-            ollama_messages = [
-                {'role': msg.role, 'content': msg.content}
-                for msg in messages
-            ]
-
-            # Get response from Ollama
-            try:
-                response = ollama.chat(
-                    model=session.model_name,
-                    messages=ollama_messages,
-                    options={'host': config.OLLAMA_HOST}
-                )
-                assistant_message = response['message']['content']
-            except Exception as ollama_error:
-                return jsonify({'error': f'Ollama error: {str(ollama_error)}'}), 503
-            
-            # Save assistant message
-            assistant_msg = Message(
-                session_id=session_id,
-                role='assistant',
-                content=assistant_message
-            )
-            db.add(assistant_msg)
-            db.commit()
-            db.refresh(assistant_msg)
-            
-            return jsonify({
-                'response': assistant_message,
-                'message_id': assistant_msg.id,
-                'timestamp': assistant_msg.timestamp.isoformat()
-            }), 200
-            
-        finally:
+        # Get session details
+        session = db.query(Session).filter(Session.id == session_id).first()
+        if not session:
             db.close()
-            
-    except Exception as e:
+            return jsonify({'error': 'Session not found'}), 404
+
+        if session.model_name == 'unaided':
+            db.close()
+            return jsonify({'error': 'Chat is not available in unaided mode'}), 400
+
+        context_cutoff = session.context_reset_at or session.created_at
+
+        # Persist user's message immediately
+        user_msg = Message(
+            session_id=session_id,
+            role='user',
+            content=user_message
+        )
+        db.add(user_msg)
+        db.commit()
+        db.refresh(user_msg)
+
+        # Build conversation history for model context (messages since last reset)
+        messages = db.query(Message).filter(
+            Message.session_id == session_id,
+            Message.timestamp >= context_cutoff
+        ).order_by(Message.timestamp).all()
+
+        chat_history = [
+            {'role': msg.role, 'content': msg.content}
+            for msg in messages
+        ]
+
+        model_name = session.model_name
+
+        if wants_stream:
+            def stream_response():
+                accumulated_parts = []
+                try:
+                    stream = ollama.chat(
+                        model=model_name,
+                        messages=chat_history,
+                        stream=True,
+                        options={'host': config.OLLAMA_HOST}
+                    )
+
+                    for chunk in stream:
+                        message_piece = (chunk.get('message') or {}).get('content', '')
+                        if message_piece:
+                            accumulated_parts.append(message_piece)
+                            yield f"data: {json.dumps({'type': 'token', 'delta': message_piece})}\n\n"
+
+                    assistant_text = ''.join(accumulated_parts)
+
+                    assistant_msg = Message(
+                        session_id=session_id,
+                        role='assistant',
+                        content=assistant_text
+                    )
+                    db.add(assistant_msg)
+                    db.commit()
+                    db.refresh(assistant_msg)
+
+                    completion_payload = {
+                        'type': 'end',
+                        'message_id': assistant_msg.id,
+                        'timestamp': assistant_msg.timestamp.isoformat(),
+                        'content': assistant_text
+                    }
+                    yield f"data: {json.dumps(completion_payload)}\n\n"
+
+                except Exception as ollama_error:  # pylint: disable=broad-except
+                    logger.error('Streaming chat error for session %s: %s', session_id, ollama_error, exc_info=True)
+                    db.rollback()
+                    error_payload = {
+                        'type': 'error',
+                        'error': f'Ollama error: {str(ollama_error)}'
+                    }
+                    yield f"data: {json.dumps(error_payload)}\n\n"
+                finally:
+                    db.close()
+
+            headers = {
+                'Cache-Control': 'no-cache',
+                'Content-Type': 'text/event-stream',
+                'Connection': 'keep-alive',
+                'X-Accel-Buffering': 'no',
+            }
+
+            return Response(stream_with_context(stream_response()), headers=headers)
+
+        try:
+            response = ollama.chat(
+                model=model_name,
+                messages=chat_history,
+                options={'host': config.OLLAMA_HOST}
+            )
+            assistant_message = response['message']['content']
+        except Exception as ollama_error:  # pylint: disable=broad-except
+            db.close()
+            return jsonify({'error': f'Ollama error: {str(ollama_error)}'}), 503
+
+        assistant_msg = Message(
+            session_id=session_id,
+            role='assistant',
+            content=assistant_message
+        )
+        db.add(assistant_msg)
+        db.commit()
+        db.refresh(assistant_msg)
+        db.close()
+
+        return jsonify({
+            'response': assistant_message,
+            'message_id': assistant_msg.id,
+            'timestamp': assistant_msg.timestamp.isoformat()
+        }), 200
+
+    except Exception as e:  # pylint: disable=broad-except
+        logger.error('Unexpected error in send_message: %s', e, exc_info=True)
         return jsonify({'error': str(e)}), 500
 
 
