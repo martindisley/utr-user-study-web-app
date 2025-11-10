@@ -87,7 +87,7 @@
 
                 <!-- Question 1: Age bracket -->
                 <div class="question-section">
-                    <label class="block text-base font-semibold text-gray-900 mb-3">
+                    <label class="block text-base text-gray-900 mb-3">
                         1. Which of the following age brackets do you fall into?
                         <span class="text-red-500">*</span>
                     </label>
@@ -133,7 +133,7 @@
 
                 <!-- Question 2: Gender -->
                 <div class="question-section">
-                    <label class="block text-base font-semibold text-gray-900 mb-3">
+                    <label class="block text-base text-gray-900 mb-3">
                         2. Which of the following best describes your gender?
                         <span class="text-red-500">*</span>
                     </label>
@@ -151,8 +151,18 @@
                             <label for="gender_nonbinary" class="text-gray-700 cursor-pointer flex-1">Non-Binary</label>
                         </div>
                         <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
-                            <input type="radio" id="gender_other" name="gender" value="Other" class="mr-3 h-4 w-4">
-                            <label for="gender_other" class="text-gray-700 cursor-pointer flex-1">Other</label>
+                            <input type="radio" id="gender_other" name="gender" value="other_specified" class="mr-3 h-4 w-4">
+                            <label for="gender_other" class="text-gray-700 cursor-pointer flex-1">Self-Describe</label>
+                        </div>
+                        <div id="gender_other_container" class="hidden ml-6">
+                            <input 
+                                type="text" 
+                                id="gender_other_text" 
+                                name="gender_other_text"
+                                autocomplete="off"
+                                placeholder="Please specify"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none"
+                            >
                         </div>
                         <div class="radio-option flex items-center p-3 rounded-lg border border-gray-200">
                             <input type="radio" id="gender_prefer_not" name="gender" value="Prefer not to say" class="mr-3 h-4 w-4">
@@ -163,8 +173,8 @@
 
                 <!-- Question 3: English first language -->
                 <div class="question-section">
-                    <label class="block text-base font-semibold text-gray-900 mb-3">
-                        3. We will ask you to use English to interact with the models in this study. Is English your first language?
+                    <label class="block text-base text-gray-900 mb-3">
+                        3. We're asking you to interact with the models in this study using English. Is English your first language?
                         <span class="text-red-500">*</span>
                     </label>
                     <div class="space-y-2">
@@ -183,8 +193,8 @@
 
                 <!-- Question 4: LLM usage for administrative tasks -->
                 <div class="question-section">
-                    <label class="block text-base font-semibold text-gray-900 mb-3">
-                        4. How often do you use a Large Language Model (such as ChatGPT, Claude or Gemini) for administrative or knowledge work tasks (routine and non-creative tasks that require information and expertise and problem solving)?
+                    <label class="block text-base text-gray-900 mb-3">
+                        4. How often do you use a Large Language Model (such as ChatGPT, Claude or Gemini) for routine or non-creative tasks?
                         <span class="text-red-500">*</span>
                     </label>
                     <div class="space-y-2">
@@ -219,10 +229,10 @@
                     </div>
                 </div>
 
-                <!-- Question 5: LLM usage for creative tasks -->
+                <!-- Question 5: Frequency of use -->
                 <div class="question-section">
-                    <label class="block text-base font-semibold text-gray-900 mb-3">
-                        5. How often do you use a Large Language Model (such as ChatGPT, Claude or Gemini) for creative tasks?
+                    <label class="block text-base text-gray-900 mb-3">
+                        5. How often do you use Generative AI tools for creative or professional tasks (e.g., writing, ideation, image generation, coding, problem-solving)?
                         <span class="text-red-500">*</span>
                     </label>
                     <div class="space-y-2">
@@ -257,20 +267,20 @@
                     </div>
                 </div>
 
-                <!-- Question 6: LLMs in creative process -->
+                <!-- Question 6: Creative process -->
                 <div class="question-section">
-                    <label for="creative_process" class="block text-base font-semibold text-gray-900 mb-3">
-                        6. How do Large Language Models fit into your creative process, what role do they play at different stages (ideation, development, etc.) and how do you feel they perform at assisting you in creative tasks?
+                    <label for="creative_process" class="block text-base text-gray-900 mb-3">
+                        6. Please briefly describe your typical creative or ideation process when working on a new idea or project. For example, how do you start brainstorming? What methods or tools do you use? How do you organise your thoughts?
                         <span class="text-red-500">*</span>
                     </label>
                     <textarea
                         id="creative_process"
                         name="creative_process"
-                        rows="6"
+                        rows="5"
                         required
                         autocomplete="off"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none"
-                        placeholder="Please describe your experience with LLMs in your creative process..."
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none resize-y"
+                        placeholder="Describe your creative process..."
                     ></textarea>
                 </div>
 
@@ -328,6 +338,26 @@
         // Display user email
         userEmail.textContent = `Logged in as: ${Storage.getUserEmail()}`;
 
+        // Show/hide "Other" gender text input
+        const genderOtherRadio = document.getElementById('gender_other');
+        const genderOtherContainer = document.getElementById('gender_other_container');
+        const genderOtherText = document.getElementById('gender_other_text');
+        const genderRadios = document.querySelectorAll('input[name="gender"]');
+
+        genderRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                if (radio.id === 'gender_other' && radio.checked) {
+                    genderOtherContainer.classList.remove('hidden');
+                    genderOtherText.required = true;
+                    genderOtherText.focus();
+                } else {
+                    genderOtherContainer.classList.add('hidden');
+                    genderOtherText.required = false;
+                    genderOtherText.value = '';
+                }
+            });
+        });
+
         // Check if pre-activity questionnaire already completed
         async function checkCompletion() {
             try {
@@ -378,6 +408,12 @@
                 
                 for (let [key, value] of formData.entries()) {
                     responses[key] = value;
+                }
+
+                // Handle "Other" gender response
+                if (responses.gender === 'other_specified' && responses.gender_other_text) {
+                    responses.gender = `Other: ${responses.gender_other_text}`;
+                    delete responses.gender_other_text;
                 }
 
                 // Submit questionnaire
