@@ -214,17 +214,20 @@ def export_data():
 @admin_bp.route('/admin/stats', methods=['GET'])
 def get_stats():
     """
-    Get basic statistics about the study.
+    Get per-user statistics about the study.
     
     Response:
         {
             "total_users": 10,
-            "total_sessions": 25,
-            "total_messages": 150,
-            "sessions_by_model": {
-                "llama3.2:3b": 12,
-                "UnlearningToRest": 13
-            }
+            "users": [
+                {
+                    "email": "student@example.edu",
+                    "session_count": 3,
+                    "questionnaire_count": 4,
+                    "prompt_count": 12,
+                    "message_count": 45
+                }
+            ]
         }
     """
     try:
@@ -233,65 +236,46 @@ def get_stats():
         try:
             from sqlalchemy import func
             
-            # Basic counts
-            total_users = db.query(func.count(User.id)).scalar()
-            total_sessions = db.query(func.count(Session.id)).scalar()
-            total_messages = db.query(func.count(Message.id)).scalar()
-            total_prompts = db.query(func.count(Prompt.id)).scalar()
-            total_generated_images = db.query(func.count(GeneratedImage.id)).scalar()
-            total_moodboard_images = db.query(func.count(MoodboardImage.id)).scalar()
-            total_questionnaires = db.query(func.count(QuestionnaireResponse.id)).scalar()
+            # Get all users
+            users = db.query(User).order_by(User.email).all()
             
-            # Sessions by model
-            sessions_by_model = {}
-            model_counts = db.query(
-                Session.model_name,
-                func.count(Session.id)
-            ).group_by(Session.model_name).all()
-            
-            for model_name, count in model_counts:
-                sessions_by_model[model_name] = count
-            
-            prompts_by_model = {}
-            prompt_counts = db.query(
-                Session.model_name,
-                func.count(Prompt.id)
-            ).join(Prompt, Prompt.session_id == Session.id).group_by(Session.model_name).all()
-
-            for model_name, count in prompt_counts:
-                prompts_by_model[model_name] = count
-            
-            images_by_model = {}
-            image_counts = db.query(
-                Session.model_name,
-                func.count(GeneratedImage.id)
-            ).join(GeneratedImage, GeneratedImage.session_id == Session.id).group_by(Session.model_name).all()
-
-            for model_name, count in image_counts:
-                images_by_model[model_name] = count
-
-            # Questionnaires by type
-            questionnaires_by_type = {}
-            questionnaire_counts = db.query(
-                QuestionnaireResponse.questionnaire_type,
-                func.count(QuestionnaireResponse.id)
-            ).group_by(QuestionnaireResponse.questionnaire_type).all()
-
-            for q_type, count in questionnaire_counts:
-                questionnaires_by_type[q_type] = count
+            users_stats = []
+            for user in users:
+                # Count sessions for this user
+                session_count = db.query(func.count(Session.id)).filter(
+                    Session.user_id == user.id
+                ).scalar()
+                
+                # Count questionnaires for this user
+                questionnaire_count = db.query(func.count(QuestionnaireResponse.id)).filter(
+                    QuestionnaireResponse.user_id == user.id
+                ).scalar()
+                
+                # Count prompts for this user (via their sessions)
+                prompt_count = db.query(func.count(Prompt.id)).join(
+                    Session, Prompt.session_id == Session.id
+                ).filter(
+                    Session.user_id == user.id
+                ).scalar()
+                
+                # Count messages for this user (via their sessions)
+                message_count = db.query(func.count(Message.id)).join(
+                    Session, Message.session_id == Session.id
+                ).filter(
+                    Session.user_id == user.id
+                ).scalar()
+                
+                users_stats.append({
+                    'email': user.email,
+                    'session_count': session_count,
+                    'questionnaire_count': questionnaire_count,
+                    'prompt_count': prompt_count,
+                    'message_count': message_count
+                })
 
             return jsonify({
-                'total_users': total_users,
-                'total_sessions': total_sessions,
-                'total_messages': total_messages,
-                'total_prompts': total_prompts,
-                'total_generated_images': total_generated_images,
-                'total_moodboard_images': total_moodboard_images,
-                'total_questionnaire_responses': total_questionnaires,
-                'sessions_by_model': sessions_by_model,
-                'prompts_by_model': prompts_by_model,
-                'images_by_model': images_by_model,
-                'questionnaires_by_type': questionnaires_by_type
+                'total_users': len(users),
+                'users': users_stats
             }), 200
             
         finally:
