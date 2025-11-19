@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preparing Activity - LLM Design Ideation Evaluator</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui']
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        html, body {
+            min-height: 100vh;
+            height: 100%;
+        }
+        
+        body {
+            font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
+            background-color: #f9fafb !important;
+            background-image:
+                radial-gradient(at 15% 20%, rgba(79, 70, 229, 0.1) 0, rgba(249, 250, 251, 0) 50%),
+                radial-gradient(at 85% 10%, rgba(236, 72, 153, 0.1) 0, rgba(249, 250, 251, 0) 55%),
+                radial-gradient(at 50% 95%, rgba(16, 185, 129, 0.12) 0, rgba(249, 250, 251, 0) 60%);
+            background-repeat: no-repeat;
+            background-size: 100% 100%;
+            background-attachment: fixed;
+        }
+    </style>
+</head>
+<body class="antialiased text-gray-900">
+    <div class="min-h-screen flex items-center justify-center p-6">
+        <div class="max-w-2xl w-full">
+            <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-12 text-center">
+                <div class="inline-block animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-gray-900 mb-6"></div>
+                <h1 class="text-2xl font-light tracking-tight text-gray-900 mb-3">Preparing Your Activity</h1>
+                <p class="text-sm text-gray-600" id="statusText">Please wait while we set up your ideation session...</p>
+                
+                <div id="errorState" class="hidden mt-6">
+                    <div class="bg-red-50 border border-red-200 rounded-xl p-6">
+                        <p class="text-sm text-red-700 mb-4" id="errorMessage"></p>
+                        <button onclick="location.href='login.html'" class="inline-flex items-center justify-center px-5 py-2.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-500 transition-colors">
+                            Return to Login
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load JavaScript modules -->
+    <script src="env.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/storage.js"></script>
+    
+    <script>
+        // Check if user is logged in
+        if (!Storage.isLoggedIn()) {
+            window.location.href = 'login.html';
+        }
+
+        const statusText = document.getElementById('statusText');
+        const errorState = document.getElementById('errorState');
+        const errorMessage = document.getElementById('errorMessage');
+
+        function showError(message) {
+            statusText.classList.add('hidden');
+            errorState.classList.remove('hidden');
+            errorMessage.textContent = message;
+        }
+
+        async function assignAndStartActivity() {
+            try {
+                const userId = Storage.getUserId();
+                
+                // Get the next assigned model
+                const modelAssignment = await API.getNextModel(userId);
+                
+                statusText.textContent = `Setting up ${modelAssignment.model_name}...`;
+                
+                // Create session with assigned model
+                const session = await API.createSession(userId, modelAssignment.model_id);
+                
+                // Save session data
+                Storage.saveSession(session.id, modelAssignment.model_id);
+                
+                // Redirect to ideation page
+                window.location.href = 'ideation.html';
+                
+            } catch (error) {
+                console.error('Error assigning model:', error);
+                if (error.message.includes('All activities completed')) {
+                    // This shouldn't happen, but just in case
+                    showError('All activities have been completed. Please proceed to the concluding questionnaire.');
+                    setTimeout(() => {
+                        window.location.href = 'concluding-questionnaire.html';
+                    }, 3000);
+                } else {
+                    showError(error.message || 'Failed to prepare activity. Please try again or contact support.');
+                }
+            }
+        }
+
+        // Start the assignment process
+        assignAndStartActivity();
+    </script>
+</body>
+</html>

@@ -548,6 +548,21 @@ const API = {
 
         return await response.json();
     },
+
+    /**
+     * Get the next assigned model for a user
+     * @param {number} userId - User ID
+     * @returns {Promise<Object>} { model_id, model_name, model_description, activity_number }
+     */
+    async getNextModel(userId) {
+        const response = await fetch(`${CONFIG.API_BASE_URL}/api/user/${userId}/next-model`);
+
+        if (!response.ok) {
+            await this._parseError(response, 'Failed to get next model');
+        }
+
+        return await response.json();
+    },
 };
 
 // Export API object

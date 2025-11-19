@@ -4,14 +4,34 @@ A web application for conducting user studies with LLM models (Llama 3.2:3b and 
 
 ## Project Overview
 
-This application allows undergraduate design students to participate in an ideation activity using two different language models. The app features:
+This application allows undergraduate design students to participate in an ideation activity using three different conditions:
+1. **Meta Llama 3.2** - Standard LLM
+2. **Unlearning To Rest** - Custom ablated model
+3. **Unaided** - No AI assistance (notes only)
+
+### Key Features:
 
 - Simple email-based session tracking (no passwords)
-- **Moodboard creation** for collecting reference images before starting
-- Model selection interface
-- Chat interface with reset functionality and concept capture panel
+- **Randomized model assignment** for counterbalancing (each user gets a random order of all 3 models)
+- **Moodboard creation** for collecting reference images (done once at the start)
+- **3 ideation sessions** - one with each model condition in randomized order
+- Chat interface with AI models or notes panel for unaided condition
+- Concept capture panel for saving image generation prompts
+- Automatic image generation from captured prompts
+- Questionnaires before and after each activity
 - Automatic logging of all interactions
 - Admin panel for data export
+
+### User Flow:
+
+```
+Login → Pre-Activity Q → Moodboard (once) →
+  ┌──────────────────────────────────────────┐
+  │ Auto-Assign Model → Ideation → Gallery   │  × 3 iterations
+  │        → Post-Activity Q                 │  (randomized order)
+  └──────────────────────────────────────────┘
+→ Concluding Q → Study Complete
+```
 
 ## Tech Stack
 
@@ -149,9 +169,11 @@ utr-user-study-web-app/
 ├── frontend/
 │   ├── index.html          # Login page
 │   ├── moodboard.html      # Moodboard creation page
-│   ├── select-model.html   # Model selection
+│   ├── assignment.html     # Model assignment (automatic randomization)
 │   ├── ideation.html       # Ideation interface (chat or notes based on model)
 │   ├── gallery.html        # Generated images
+│   ├── post-activity-questionnaire.html  # Post-activity questionnaire
+│   ├── concluding-questionnaire.html     # Final questionnaire
 │   └── js/
 │       ├── config.js       # Configuration
 │       ├── api.js          # API client
@@ -186,7 +208,8 @@ See `.env.example` for a full template.
 ## API Documentation
 
 ### Authentication
-- `POST /api/login` - Login with email (creates user if new)
+- `POST /api/login` - Login with email (creates user if new, assigns random model order)
+- `GET /api/user/<user_id>/next-model` - Get next assigned model in user's randomized order
 
 ### Moodboard
 - `POST /api/moodboard/upload` - Upload reference image
