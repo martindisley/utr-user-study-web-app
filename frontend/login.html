@@ -63,6 +63,19 @@
                         <p id="emailError" class="text-red-500 text-sm mt-1 hidden"></p>
                     </div>
 
+                    <div class="flex items-start">
+                        <input
+                            type="checkbox"
+                            id="consentCheckbox"
+                            required
+                            class="mt-1 h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                        >
+                        <label for="consentCheckbox" class="ml-3 text-sm text-gray-700">
+                            I confirm that I have signed and returned the consent form for this study.
+                        </label>
+                    </div>
+                    <p id="consentError" class="text-red-500 text-sm hidden">Please confirm that you have signed and returned the consent form.</p>
+
                     <button
                         type="submit"
                         id="submitBtn"
@@ -115,6 +128,8 @@
         const emailForm = document.getElementById('emailForm');
         const emailInput = document.getElementById('email');
         const emailError = document.getElementById('emailError');
+        const consentCheckbox = document.getElementById('consentCheckbox');
+        const consentError = document.getElementById('consentError');
         const submitBtn = document.getElementById('submitBtn');
         const btnText = document.getElementById('btnText');
         const btnSpinner = document.getElementById('btnSpinner');
@@ -136,6 +151,7 @@
         function clearError() {
             emailError.classList.add('hidden');
             emailInput.classList.remove('border-red-500');
+            consentError.classList.add('hidden');
         }
 
         // Set loading state
@@ -167,6 +183,13 @@
 
             if (!validateEmail(email)) {
                 showError('Please enter a valid email address');
+                return;
+            }
+
+            // Validate consent checkbox
+            if (!consentCheckbox.checked) {
+                consentError.classList.remove('hidden');
+                consentCheckbox.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return;
             }
 
@@ -221,6 +244,7 @@
 
         // Clear error on input
         emailInput.addEventListener('input', clearError);
+        consentCheckbox.addEventListener('change', clearError);
     </script>
 </body>
 </html>

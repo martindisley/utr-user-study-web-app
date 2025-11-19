@@ -15,6 +15,7 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     email = Column(String(255), unique=True, nullable=False, index=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    model_order = Column(String(100), nullable=True)  # Comma-separated order of models assigned (e.g., "llama3.2:3b,unaided,martindisley/unlearning-to-rest:latest")
     
     # Relationships
     sessions = relationship('Session', back_populates='user', cascade='all, delete-orphan')
@@ -24,7 +25,8 @@ class User(Base):
         return {
             'id': self.id,
             'email': self.email,
-            'created_at': self.created_at.isoformat()
+            'created_at': self.created_at.isoformat(),
+            'model_order': self.model_order.split(',') if self.model_order else None
         }
 
 

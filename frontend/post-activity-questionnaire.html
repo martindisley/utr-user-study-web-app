@@ -358,8 +358,8 @@
         // Check if there's an active session
         const sessionId = Storage.getSessionId();
         if (!sessionId) {
-            // No active session, redirect to model selection
-            window.location.href = 'select-model.html';
+            // No active session, redirect to assignment page
+            window.location.href = 'assignment.html';
         }
 
         const questionnaireForm = document.getElementById('questionnaireForm');
@@ -469,8 +469,8 @@
                 // Go to concluding questionnaire after 3rd activity
                 window.location.href = 'concluding-questionnaire.html';
             } else {
-                // Continue to next model
-                window.location.href = 'select-model.html';
+                // Continue to next assigned model
+                window.location.href = 'assignment.html';
             }
         }
 
